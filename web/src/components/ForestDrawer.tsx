@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef } from 'react';
 import { maplibregl, MAP_STYLE } from '../lib/maplibre';
 import {
   addDaysISO, cellClass, dow, DOW, FLAG_LABELS, goodsPasses, holidayName, isoOf, isOpen, isWeekendStay, kindName,
-  naverPlaceUrl, RESERVE_URL, statusLabel, statusShort, type Filters, type Forest, type Status,
+  naverPlaceUrl, rateOf, RESERVE_URL, statusLabel, statusShort, type Filters, type Forest, type Status,
 } from '../lib/data';
 import { Reviews } from './Reviews';
+import { RateBars } from './Rate';
 
 interface Props {
   forest: Forest;
@@ -65,6 +66,9 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
           <div style={{ flex: 1 }}>
             <h2 id="drawer-title">{f.name} <span className={`badge t-${f.type}`}>{f.type}</span></h2>
             <Reviews forest={f} />
+            {kinds.map((k) => (
+              <div key={k} className="drawer-rate"><span className="fsub">{kindName(k)} 예약률</span><RateBars rate={rateOf(f, [k])} /></div>
+            ))}
             <div className="fsub">{f.addr || `${f.sidoName} · ${f.sigungu}`}</div>
             <div className="fsub">
               객실·사이트 {f.goods.length}개 · 예약가능 {openCount}건

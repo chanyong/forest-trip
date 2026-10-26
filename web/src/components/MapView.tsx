@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { maplibregl, MAP_STYLE } from '../lib/maplibre';
 import { addDaysISO, compactNum, fmtDate, isoOf, reviewTotal, type Filters, type ForestResult, type Status } from '../lib/data';
 import { Reviews } from './Reviews';
+import { RateBars } from './Rate';
 
 interface Props {
   results: ForestResult[];
@@ -69,7 +70,8 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
         `<b>${esc(r.forest.name)}</b> <small>${esc(r.forest.type)}</small><br/>` +
         `<small>${esc(r.forest.sigungu)}</small>` +
         (r.forest.naver ? ` <small>· 네이버 ${r.forest.naver.s ? '★' + r.forest.naver.s.toFixed(2) + ' ' : ''}리뷰 ${compactNum(r.forest.naver.v)}</small>` : '') + '<br/>' +
-        `가능 ${r.total}건 · 가장 가까운 날 ${first}`,
+        `가능 ${r.total}건 · 가장 가까운 날 ${first}` +
+        (r.rate.we != null ? `<br/><small>예약률 주말 ${r.rate.we}% · 평일 ${r.rate.wd ?? '-'}%</small>` : ''),
       );
       const mk = new maplibregl.Marker({ element: el }).setLngLat([r.forest.lng!, r.forest.lat!]).setPopup(popup).addTo(m);
       el.addEventListener('click', () => setSel(r.forest.id));
@@ -126,6 +128,9 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
                   {r.dist != null ? ` · ${r.dist.toFixed(0)}km` : ''}
                 </span>
               </button>
+              <div className="item-sub">
+                <RateBars rate={r.rate} />
+              </div>
               <div className="item-sub">
                 <Reviews forest={r.forest} />
                 <button className="link-btn" onClick={() => onOpen(r.forest.id)}>상세 보기 →</button>

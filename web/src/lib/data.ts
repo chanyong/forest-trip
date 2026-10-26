@@ -1,4 +1,5 @@
 // 수집 데이터 타입, 날짜 유틸, 필터 계산
+import holidays from './holidays.json';
 export type Kind = '01' | '02'; // 01 숙소, 02 야영장
 
 export interface Goods {
@@ -28,6 +29,7 @@ export interface Forest {
   checkin?: string | null;
   checkout?: string | null;
   naver?: { id: string; v: number; b: number; s: number | null } | null; // 네이버 방문자·블로그 리뷰 수, 별점
+  booking?: Partial<Record<Kind, { we: [number, number]; wd: [number, number] }>>; // 시설별 주말·평일 [예약된 날, 예약 받는 날]
   goods: Goods[];
 }
 
@@ -81,18 +83,7 @@ export const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 export const todayKST = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 
 // 공휴일(대체공휴일 포함). 매년 갱신 필요.
-const HOLIDAYS: Record<string, string> = {
-  '2026-01-01': '신정', '2026-02-16': '설날', '2026-02-17': '설날', '2026-02-18': '설날',
-  '2026-03-01': '삼일절', '2026-03-02': '대체공휴일', '2026-05-05': '어린이날', '2026-05-24': '부처님오신날',
-  '2026-05-25': '대체공휴일', '2026-06-03': '지방선거', '2026-06-06': '현충일', '2026-08-15': '광복절',
-  '2026-08-17': '대체공휴일', '2026-09-24': '추석', '2026-09-25': '추석', '2026-09-26': '추석',
-  '2026-10-03': '개천절', '2026-10-05': '대체공휴일', '2026-10-09': '한글날', '2026-12-25': '성탄절',
-  '2027-01-01': '신정', '2027-02-06': '설날', '2027-02-07': '설날', '2027-02-08': '설날', '2027-02-09': '대체공휴일',
-  '2027-03-01': '삼일절', '2027-05-05': '어린이날', '2027-05-13': '부처님오신날', '2027-06-06': '현충일',
-  '2027-08-15': '광복절', '2027-08-16': '대체공휴일', '2027-09-14': '추석', '2027-09-15': '추석',
-  '2027-09-16': '추석', '2027-10-03': '개천절', '2027-10-04': '대체공휴일', '2027-10-09': '한글날',
-  '2027-10-11': '대체공휴일', '2027-12-25': '성탄절', '2027-12-27': '대체공휴일',
-};
+const HOLIDAYS: Record<string, string> = holidays; // 수집기(collector/stats.mjs)와 같이 쓴다
 export const holidayName = (iso: string) => HOLIDAYS[iso];
 export const isRestDay = (iso: string) => dow(iso) === 0 || dow(iso) === 6 || !!HOLIDAYS[iso];
 // 체크인 다음 날이 쉬는 날이면 '주말 숙박'
@@ -117,7 +108,9 @@ export interface Filters {
   weekend: boolean;
   wait: boolean;
   q: string;
-  sort: 'date' | 'count' | 'name' | 'dist' | 'review';
+  weRate: RateCond; // 주말 예약률 조건
+  wdRate: RateCond; // 평일 예약률 조건
+  sort: 'date' | 'count' | 'name' | 'dist' | 'review' | 'popular';
 }
 
 // 오늘처럼 모든 객실이 '정보 없음'인 앞쪽 날짜는 건너뛴다
@@ -141,6 +134,8 @@ export const defaultFilters = (start: string, days: number, skip = 0): Filters =
   weekend: false,
   wait: false,
   q: '',
+  weRate: '',
+  wdRate: '',
   sort: 'date',
 });
 
@@ -158,6 +153,8 @@ export function filtersFromURL(base: Filters): Filters {
   f.weekend = p.get('weekend') === '1';
   f.wait = p.get('wait') === '1';
   if (p.get('q')) f.q = p.get('q')!;
+  if (RATE_CONDS.some((c) => c.value === p.get('we'))) f.weRate = p.get('we') as RateCond;
+  if (RATE_CONDS.some((c) => c.value === p.get('wd'))) f.wdRate = p.get('wd') as RateCond;
   if (p.get('sort')) f.sort = p.get('sort') as Filters['sort'];
   return f;
 }
@@ -173,6 +170,8 @@ export function filtersToURL(f: Filters, base: Filters) {
   if (f.weekend) p.set('weekend', '1');
   if (f.wait) p.set('wait', '1');
   if (f.q) p.set('q', f.q);
+  if (f.weRate) p.set('we', f.weRate);
+  if (f.wdRate) p.set('wd', f.wdRate);
   if (f.sort !== 'date') p.set('sort', f.sort);
   const qs = p.toString();
   const forest = new URLSearchParams(location.search).get('forest');
@@ -194,6 +193,7 @@ export interface ForestResult {
   total: number;
   first: number;
   dist?: number;
+  rate: Rate;
 }
 
 export function goodsPasses(g: Goods, f: Filters) {
@@ -202,6 +202,38 @@ export function goodsPasses(g: Goods, f: Filters) {
   for (const fl of f.flags) if (!g.flags.includes(fl)) return false;
   return true;
 }
+
+// ---- 예약률 ----
+export type RateCond = '' | 'g90' | 'g70' | 'g50' | 'l70' | 'l50' | 'l30';
+export const RATE_CONDS: { value: RateCond; label: string }[] = [
+  { value: '', label: '전체' },
+  { value: 'g90', label: '90% 이상' },
+  { value: 'g70', label: '70% 이상' },
+  { value: 'g50', label: '50% 이상' },
+  { value: 'l70', label: '70% 미만' },
+  { value: 'l50', label: '50% 미만' },
+  { value: 'l30', label: '30% 미만' },
+];
+export interface Rate { we: number | null; wd: number | null } // 0~100, 표본이 적으면 null
+const MIN_SAMPLE = 10;
+
+// 고른 시설(숙소/야영장)만 합쳐서 예약률을 낸다
+export function rateOf(fo: Forest, kinds: Kind[]): Rate {
+  const we = [0, 0], wd = [0, 0];
+  for (const [k, v] of Object.entries(fo.booking || {}) as [Kind, { we: number[]; wd: number[] }][]) {
+    if (kinds.length && !kinds.includes(k)) continue;
+    we[0] += v.we[0]; we[1] += v.we[1]; wd[0] += v.wd[0]; wd[1] += v.wd[1];
+  }
+  const pct = ([a, b]: number[]) => (b >= MIN_SAMPLE ? Math.round((a / b) * 100) : null);
+  return { we: pct(we), wd: pct(wd) };
+}
+
+const ratePasses = (v: number | null, c: RateCond) => {
+  if (!c) return true;
+  if (v == null) return false;
+  const n = +c.slice(1);
+  return c[0] === 'g' ? v >= n : v < n;
+};
 
 export function forestPasses(fo: Forest, f: Filters) {
   if (f.sidos.length && !f.sidos.includes(fo.sido)) return false;
@@ -223,6 +255,8 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
   const out: ForestResult[] = [];
   for (const fo of status.forests) {
     if (!forestPasses(fo, f)) continue;
+    const rate = rateOf(fo, f.kinds);
+    if (!ratePasses(rate.we, f.weRate) || !ratePasses(rate.wd, f.wdRate)) continue;
     const goods: GoodsResult[] = [];
     const hitDates = new Map<number, number>();
     let total = 0;
@@ -245,7 +279,7 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
         if (hits[0] < first) first = hits[0];
       }
     }
-    const r: ForestResult = { forest: fo, goods, hitDates, total, first };
+    const r: ForestResult = { forest: fo, goods, hitDates, total, first, rate };
     if (origin && fo.lat != null && fo.lng != null) r.dist = haversine(origin, { lat: fo.lat, lng: fo.lng! });
     out.push(r);
   }
@@ -255,7 +289,8 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
     name: (a: ForestResult, b: ForestResult) => a.forest.name.localeCompare(b.forest.name, 'ko'),
     dist: (a: ForestResult, b: ForestResult) => (a.dist ?? 1e9) - (b.dist ?? 1e9),
     review: (a: ForestResult, b: ForestResult) => reviewTotal(b.forest) - reviewTotal(a.forest),
-  }[f.sort] || ((a: ForestResult, b: ForestResult) => a.first - b.first);
+    popular: (a: ForestResult, b: ForestResult) => (b.rate.we ?? -1) - (a.rate.we ?? -1) || (b.rate.wd ?? -1) - (a.rate.wd ?? -1),
+  }[f.sort === 'dist' && !origin ? 'date' : f.sort] || ((a: ForestResult, b: ForestResult) => a.first - b.first);
   return out.sort((a, b) => (b.total ? 1 : 0) - (a.total ? 1 : 0) || by(a, b));
 }
 
@@ -287,6 +322,7 @@ export const SORTS: { value: Filters['sort']; label: string }[] = [
   { value: 'date', label: '가까운 날짜순' },
   { value: 'count', label: '빈자리 많은 순' },
   { value: 'review', label: '리뷰 많은 순' },
+  { value: 'popular', label: '주말 예약률 높은 순' },
   { value: 'name', label: '이름순' },
   { value: 'dist', label: '가까운 거리순' },
 ];

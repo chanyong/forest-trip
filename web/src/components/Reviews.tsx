@@ -10,8 +10,8 @@ export function Reviews({ forest, compact = false }: { forest: Forest; compact?:
       onClick={(e) => e.stopPropagation()}>
       <span className="rv-n" aria-hidden>N</span>
       {n.s ? <span className="rv-s">★{n.s.toFixed(2)}</span> : null}
-      <span>리뷰 {compactNum(n.v)}</span>
-      {!compact && <span className="rv-b">블로그 {compactNum(n.b)}</span>}
+      {n.v > 0 && <span>리뷰 {compactNum(n.v)}</span>}
+      {(!compact || !n.v) && <span className="rv-b">블로그 {compactNum(n.b)}</span>}
     </a>
   );
 }

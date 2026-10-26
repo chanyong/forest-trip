@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { addDaysISO, fmtDate, holidayName, isoOf, isRestDay, kindName, SORTS, type Filters, type ForestResult, type Status } from '../lib/data';
 import { Reviews } from './Reviews';
+import { RateBars } from './Rate';
 
 interface Props {
   results: ForestResult[];
@@ -36,6 +37,7 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
   const [showEmpty, setShowEmpty] = useState(false);
   const start = isoOf(status.start);
   const rows = showEmpty ? results : results.filter((r) => r.total > 0);
+  const hasDist = rows.some((r) => r.dist != null);
   const emptyCount = results.length - results.filter((r) => r.total > 0).length;
 
   const sortBtn = (k: Filters['sort'], label: string) => (
@@ -57,8 +59,8 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
         <span className="sp" />
         <label className="field sel">
           <span>정렬</span>
-          <select value={filters.sort} onChange={(e) => set({ sort: e.target.value as Filters['sort'] })}>
-            {SORTS.filter((o) => o.value !== 'dist' || rows.some((r) => r.dist != null)).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          <select value={filters.sort === 'dist' && !hasDist ? 'date' : filters.sort} onChange={(e) => set({ sort: e.target.value as Filters['sort'] })}>
+            {SORTS.filter((o) => o.value !== 'dist' || hasDist).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </label>
       </div>
@@ -68,8 +70,9 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
             <th>{sortBtn('name', '휴양림')}</th>
             <th>{sortBtn('date', '가장 가까운 날짜')}</th>
             <th>{sortBtn('count', '가능 건수')}</th>
+            <th>{sortBtn('popular', '예약률')}</th>
             <th>예약 가능 체크인 날짜</th>
-            <th><span className="sr-only">거리·객실별 보기</span>{filters.sort === 'dist' ? '거리' : ''}</th>
+            <th>{hasDist ? '내 위치에서' : <span className="sr-only">객실별 보기</span>}</th>
           </tr>
         </thead>
         <tbody>
@@ -93,7 +96,8 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
                   <span className="num">{r.total}<span className="m-only">건</span></span>
                   <div className="fsub">{r.goods.length}개 객실</div>
                 </td>
-                <td style={{ width: '50%' }}>
+                <td className="c-rate"><RateBars rate={r.rate} /></td>
+                <td style={{ width: '46%' }}>
                   {r.total > 0 && <DateChips idx={dates} start={start} />}
                   {isOpen && (
                     <div className="gsub">
@@ -110,7 +114,7 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
                   )}
                 </td>
                 <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
-                  {r.dist != null && filters.sort === 'dist' && <div className="fsub">{r.dist.toFixed(0)}km</div>}
+                  {r.dist != null && <div className="fsub">{r.dist.toFixed(0)}km</div>}
                   {r.total > 0 && (
                     <button className="expand" aria-expanded={isOpen} aria-label={`${f.name} 객실별 날짜 ${isOpen ? '접기' : '보기'}`} onClick={() => setOpen((s) => { const n = new Set(s); n.has(f.id) ? n.delete(f.id) : n.add(f.id); return n; })}>
                       {isOpen ? '접기' : '객실별'}

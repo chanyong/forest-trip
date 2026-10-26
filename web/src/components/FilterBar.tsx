@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addDaysISO, dow, FLAG_LABELS, SIDOS, type Filters, type Kind } from '../lib/data';
+import { addDaysISO, dow, FLAG_LABELS, RATE_CONDS, SIDOS, type Filters, type Kind } from '../lib/data';
 import { MultiSelect, Select } from './Dropdown';
 
 interface Props {
@@ -37,7 +37,7 @@ export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin }: P
   const periodOpts = [...quick, ...(period === 'custom' ? [{ value: 'custom', label: '직접 선택' }] : [])];
 
   // 모바일에서 접혀 있는 보조 필터 중 켜진 개수
-  const extra = [f.types.length, f.kinds.length, f.flags.length, f.people ? 1 : 0].filter(Boolean).length;
+  const extra = [f.types.length, f.kinds.length, f.flags.length, f.people, f.weRate, f.wdRate].filter(Boolean).length;
 
   return (
     <section className={`filters${more ? ' more' : ''}`} aria-label="검색 조건">
@@ -60,6 +60,9 @@ export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin }: P
         <button className="chip" aria-pressed={f.wait} onClick={() => set({ wait: !f.wait })} title="대기 신청 가능한 날짜 포함">
           대기 포함
         </button>
+        <span className="frow-sp" />
+        <button className="chip" aria-pressed={hasOrigin} onClick={locate}><span aria-hidden>📍</span> 내 위치</button>
+        <button className="chip ghost" onClick={reset}><span aria-hidden>⟳</span> 초기화</button>
       </div>
       <div className="frow">
         <MultiSelect label="지역" options={SIDO_OPTS} value={f.sidos} onChange={(v) => set({ sidos: v })} allLabel="전국" />
@@ -75,10 +78,9 @@ export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin }: P
           <MultiSelect label="시설" options={KINDS} value={f.kinds} onChange={(v) => set({ kinds: v })} />
           <MultiSelect label="편의" options={FLAGS} value={f.flags} onChange={(v) => set({ flags: v })} allLabel="상관없음" />
           <Select id="f-people" label="인원" value={f.people} options={PEOPLE} onChange={(n) => set({ people: n })} />
+          <Select id="f-we" label="주말예약률" value={f.weRate} options={RATE_CONDS} onChange={(v) => set({ weRate: v })} />
+          <Select id="f-wd" label="평일예약률" value={f.wdRate} options={RATE_CONDS} onChange={(v) => set({ wdRate: v })} />
         </div>
-        <span className="frow-sp" />
-        <button className="chip" aria-pressed={hasOrigin} onClick={locate}><span aria-hidden>📍</span> 내 위치</button>
-        <button className="chip ghost" onClick={reset}><span aria-hidden>⟳</span> 초기화</button>
       </div>
     </section>
   );

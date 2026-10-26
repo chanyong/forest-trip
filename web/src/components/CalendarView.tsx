@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Reviews } from './Reviews';
+import { RateBars } from './Rate';
 import { addDaysISO, diffISO, dow, DOW, fmtDate, holidayName, isoOf, type Filters, type ForestResult, type Goods, type Status } from '../lib/data';
 
 interface Props {
@@ -123,6 +124,7 @@ function DayCard({ r, idx, onOpen }: { r: ForestResult; idx: number; onOpen: (id
       <div className="dl-meta">
         <span className="fsub">{r.forest.sidoName} · {r.forest.sigungu}</span>
         <Reviews forest={r.forest} compact />
+        <RateBars rate={r.rate} />
       </div>
       <dl className="dl-groups">
         {[...groups].map(([cls, list]) => (

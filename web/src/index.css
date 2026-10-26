@@ -401,3 +401,18 @@ button:disabled { cursor: default; opacity: 0.5; }
   .grow-g .gname > span:first-child { flex: 1; min-width: 0; }
   .grow-g .gname .fsub { display: none; }
 }
+
+/* ---- 예약률 ---- */
+.rate { display: inline-flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 12px; }
+.rate-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; color: var(--ink-2); }
+.rate-item.na { color: var(--ink-3); }
+.rate-k { color: var(--ink-3); }
+.rate-bar { width: 36px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
+.rate-bar i { display: block; height: 100%; background: var(--ink-3); }
+.rate-item.hot b { color: var(--sun); } .rate-item.hot .rate-bar i { background: var(--sun); }
+.rate-item.warm b { color: var(--wait); } .rate-item.warm .rate-bar i { background: var(--wait); }
+.rate-item.mid .rate-bar i { background: var(--ink-3); }
+.rate-item.cool b { color: var(--open); } .rate-item.cool .rate-bar i { background: var(--open); }
+.ftable td.c-rate .rate { flex-direction: column; align-items: flex-start; gap: 4px; }
+.drawer-rate { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+@media (max-width: 760px) { .ftable td.c-rate .rate { flex-direction: row; } }

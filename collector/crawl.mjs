@@ -6,6 +6,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { bookingStats, weekendMask } from './stats.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MASTER = path.join(ROOT, 'data/master.json');
@@ -198,10 +199,12 @@ async function main() {
     if (!byForest.has(g.forest)) byForest.set(g.forest, []);
     byForest.get(g.forest).push(g);
   }
+  const mask = weekendMask(today, nDays);
   const outForests = forests.map((f) => ({
     id: f.insttId, name: f.shortName, type: f.type, sido: f.sido, sidoName: f.sidoName,
     sigungu: f.sigungu, lat: f.lat, lng: f.lng, addr: f.addr, tel: f.tel, url: f.url, checkin: f.checkin, checkout: f.checkout,
     naver: naver[f.insttId] ? { id: naver[f.insttId].id, v: naver[f.insttId].v, b: naver[f.insttId].b, s: naver[f.insttId].s } : null,
+    booking: bookingStats((byForest.get(f.insttId) || []).map((g) => ({ kind: g.kind, s: g.s })), mask),
     goods: (byForest.get(f.insttId) || [])
       .sort((a, b) => a.kind.localeCompare(b.kind) || a.cls.localeCompare(b.cls, 'ko') || a.name.localeCompare(b.name, 'ko', { numeric: true }))
       .map(({ forest, s, ...g }) => ({ ...g, s: s.join('') })),

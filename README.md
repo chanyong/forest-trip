@@ -35,6 +35,12 @@ GitHub Actions (3시간마다)
 숲나들e 응답 매핑: `rsrvtAvail=Y`이고 `rsrvtCnt=0`이면 `A`. 예약이 있고 `wtngCnt < goodsMxmmWtngCnt`이면 대기, 그 밖은 `F`.
 `PRNSL_DAY`는 `C`, `REPAIR`는 `R`, `DRLTS`/`PRIOR`는 `P`, `BEFORE_DATE`/`OVER_DATE`는 `.`.
 
+## 예약률
+
+`collector/stats.mjs`가 수집할 때마다 휴양림·시설(숙소/야영장)별로 `booking: {"01": {we: [예약된 날, 예약 받는 날], wd: [...]}}`를 계산합니다.
+예약 받는 날은 `A`·대기·`F`이고, 그중 대기·`F`를 예약된 날로 셉니다. 주말은 체크인 다음 날이 토·일·공휴일인 숙박입니다.
+공휴일 목록은 `web/src/lib/holidays.json` 하나를 웹과 수집기가 같이 씁니다.
+
 ## 로컬 실행
 
 ```bash
