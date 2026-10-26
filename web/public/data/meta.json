@@ -1,20 +1,17 @@
 {
- "generatedAt": "2026-10-26T15:26:46.246Z",
- "start": "20261026",
+ "generatedAt": "2026-10-26T20:55:38.673Z",
+ "start": "20261027",
  "end": "20261231",
- "durationSec": 1783,
+ "durationSec": 1954,
  "requests": 4125,
  "ok": 4125,
  "fail": 0,
  "totals": {
   "forests": 185,
   "goods": 7464,
-  "available": 96085
+  "available": 95985
  },
- "newlyOpened": 0,
- "unknownCodes": {
-  "DRLTS": 12,
-  "PRIOR": 146
- },
+ "newlyOpened": 122,
+ "unknownCodes": {},
  "failures": []
 }
