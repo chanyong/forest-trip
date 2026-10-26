@@ -1,0 +1,17 @@
+{
+ "generatedAt": "2026-10-26T14:48:47.363Z",
+ "start": "20261026",
+ "end": "20261231",
+ "durationSec": 27,
+ "requests": 83,
+ "ok": 83,
+ "fail": 0,
+ "totals": {
+  "forests": 3,
+  "goods": 138,
+  "available": 1492
+ },
+ "newlyOpened": 0,
+ "unknownCodes": {},
+ "failures": []
+}

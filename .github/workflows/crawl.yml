@@ -1,0 +1,45 @@
+name: crawl
+
+on:
+  schedule:
+    - cron: '7 */3 * * *' # 3시간마다 (UTC)
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '휴양림 수 제한 (테스트용, 0=전체)'
+        default: '0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: crawl
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 상태 수집
+        env:
+          LIMIT_FORESTS: ${{ github.event.inputs.limit || '0' }}
+        run: node collector/crawl.mjs
+      - name: 수집 결과 요약
+        if: always()
+        run: |
+          f=web/public/data/meta.json; [ -f web/public/data/meta.failed.json ] && f=web/public/data/meta.failed.json
+          node -e "const m=require('./'+process.argv[1]);console.log(JSON.stringify({generatedAt:m.generatedAt,durationSec:m.durationSec,ok:m.ok,fail:m.fail,totals:m.totals,newlyOpened:m.newlyOpened,unknownCodes:m.unknownCodes,failures:m.failures.slice(0,5)},null,1))" "$f" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: 커밋 & 푸시 (Vercel 자동 배포)
+        run: |
+          git config user.name "forest-trip-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/public/data/status.json web/public/data/changes.json web/public/data/meta.json
+          git diff --cached --quiet && { echo "변경 없음"; exit 0; }
+          git commit -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase -X theirs origin main || true
+          git push
