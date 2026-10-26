@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef } from 'react';
 import { maplibregl, MAP_STYLE } from '../lib/maplibre';
 import {
   addDaysISO, cellClass, dow, DOW, FLAG_LABELS, goodsPasses, holidayName, isoOf, isOpen, isWeekendStay, kindName,
-  RESERVE_URL, statusLabel, statusShort, type Filters, type Forest, type Status,
+  naverPlaceUrl, RESERVE_URL, statusLabel, statusShort, type Filters, type Forest, type Status,
 } from '../lib/data';
+import { Reviews } from './Reviews';
 
 interface Props {
   forest: Forest;
@@ -59,10 +60,11 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
 
   return (
     <div className="overlay" onClick={onClose}>
-      <aside className="drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={f.name}>
+      <aside className="drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
         <div className="drawer-hd">
           <div style={{ flex: 1 }}>
-            <h2>{f.name} <span className={`badge t-${f.type}`}>{f.type}</span></h2>
+            <h2 id="drawer-title">{f.name} <span className={`badge t-${f.type}`}>{f.type}</span></h2>
+            <Reviews forest={f} />
             <div className="fsub">{f.addr || `${f.sidoName} · ${f.sigungu}`}</div>
             <div className="fsub">
               객실·사이트 {f.goods.length}개 · 예약가능 {openCount}건
@@ -70,13 +72,13 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
               {f.tel ? <> · <a href={`tel:${f.tel}`}>{f.tel}</a></> : null}
             </div>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="닫기">✕</button>
+          <button className="icon-btn" onClick={onClose} aria-label="닫기" autoFocus>✕</button>
         </div>
         <div className="drawer-bd">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <a className="btn primary" href={RESERVE_URL} target="_blank" rel="noreferrer">숲나들e에서 예약하기 ↗</a>
             {f.url && <a className="btn" href={f.url} target="_blank" rel="noreferrer">휴양림 홈페이지 ↗</a>}
-            <a className="btn" href={`https://map.naver.com/p/search/${encodeURIComponent(f.name)}`} target="_blank" rel="noreferrer">네이버 지도</a>
+            <a className="btn" href={naverPlaceUrl(f)} target="_blank" rel="noreferrer">네이버 리뷰·지도 ↗</a>
             <a className="btn" href={`https://map.kakao.com/?q=${encodeURIComponent(f.name)}`} target="_blank" rel="noreferrer">카카오맵</a>
           </div>
           {f.lat != null && <div className="minimap" ref={mapBox} />}

@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MASTER = path.join(ROOT, 'data/master.json');
+const NAVER = path.join(ROOT, 'data/naver.json'); // collector/naver-reviews.mjs가 만든 리뷰 수
 const OUT_DIR = path.join(ROOT, 'web/public/data');
 const BASE = 'https://www.foresttrip.go.kr';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
@@ -119,6 +120,8 @@ async function main() {
   const master = JSON.parse(await fs.readFile(MASTER, 'utf8'));
   let forests = master.forests;
   if (LIMIT_FORESTS) forests = forests.slice(0, LIMIT_FORESTS);
+  let naver = {};
+  try { naver = JSON.parse(await fs.readFile(NAVER, 'utf8')); } catch {}
 
   const today = ymd(kstNow());
 
@@ -198,6 +201,7 @@ async function main() {
   const outForests = forests.map((f) => ({
     id: f.insttId, name: f.shortName, type: f.type, sido: f.sido, sidoName: f.sidoName,
     sigungu: f.sigungu, lat: f.lat, lng: f.lng, addr: f.addr, tel: f.tel, url: f.url, checkin: f.checkin, checkout: f.checkout,
+    naver: naver[f.insttId] ? { id: naver[f.insttId].id, v: naver[f.insttId].v, b: naver[f.insttId].b, s: naver[f.insttId].s } : null,
     goods: (byForest.get(f.insttId) || [])
       .sort((a, b) => a.kind.localeCompare(b.kind) || a.cls.localeCompare(b.cls, 'ko') || a.name.localeCompare(b.name, 'ko', { numeric: true }))
       .map(({ forest, s, ...g }) => ({ ...g, s: s.join('') })),

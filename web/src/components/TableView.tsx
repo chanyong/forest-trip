@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { addDaysISO, fmtDate, holidayName, isoOf, isRestDay, kindName, type Filters, type ForestResult, type Status } from '../lib/data';
+import { addDaysISO, fmtDate, holidayName, isoOf, isRestDay, kindName, SORTS, type Filters, type ForestResult, type Status } from '../lib/data';
+import { Reviews } from './Reviews';
 
 interface Props {
   results: ForestResult[];
@@ -51,6 +52,16 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
 
   return (
     <div className="panel">
+      <div className="grid-tools">
+        <span>휴양림 {rows.length}곳</span>
+        <span className="sp" />
+        <label className="field sel">
+          <span>정렬</span>
+          <select value={filters.sort} onChange={(e) => set({ sort: e.target.value as Filters['sort'] })}>
+            {SORTS.filter((o) => o.value !== 'dist' || rows.some((r) => r.dist != null)).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </label>
+      </div>
       <table className="ftable">
         <thead>
           <tr>
@@ -58,7 +69,7 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
             <th>{sortBtn('date', '가장 가까운 날짜')}</th>
             <th>{sortBtn('count', '가능 건수')}</th>
             <th>예약 가능 체크인 날짜</th>
-            <th>{filters.sort === 'dist' ? '거리' : ''}</th>
+            <th><span className="sr-only">거리·객실별 보기</span>{filters.sort === 'dist' ? '거리' : ''}</th>
           </tr>
         </thead>
         <tbody>
@@ -73,12 +84,13 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
                   <button className="fname" onClick={() => onOpen(f.id)}>{f.name}</button>{' '}
                   <span className={`badge t-${f.type}`}>{f.type}</span>
                   <div className="fsub">{f.sidoName} · {f.sigungu}{kinds.length ? ` · ${kinds.join('/')}` : ''}</div>
+                  <Reviews forest={f} />
                 </td>
-                <td style={{ whiteSpace: 'nowrap' }}>
+                <td className="c-first" data-label="가장 가까운 날" style={{ whiteSpace: 'nowrap' }}>
                   {r.total ? <b>{fmtDate(addDaysISO(start, r.first))}</b> : <span className="fsub">없음</span>}
                 </td>
-                <td>
-                  <span className="num">{r.total}</span>
+                <td className="c-count" data-label="가능">
+                  <span className="num">{r.total}<span className="m-only">건</span></span>
                   <div className="fsub">{r.goods.length}개 객실</div>
                 </td>
                 <td style={{ width: '50%' }}>
@@ -100,7 +112,7 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
                 <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
                   {r.dist != null && filters.sort === 'dist' && <div className="fsub">{r.dist.toFixed(0)}km</div>}
                   {r.total > 0 && (
-                    <button className="expand" onClick={() => setOpen((s) => { const n = new Set(s); n.has(f.id) ? n.delete(f.id) : n.add(f.id); return n; })}>
+                    <button className="expand" aria-expanded={isOpen} aria-label={`${f.name} 객실별 날짜 ${isOpen ? '접기' : '보기'}`} onClick={() => setOpen((s) => { const n = new Set(s); n.has(f.id) ? n.delete(f.id) : n.add(f.id); return n; })}>
                       {isOpen ? '접기' : '객실별'}
                     </button>
                   )}

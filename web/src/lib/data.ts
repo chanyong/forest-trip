@@ -27,6 +27,7 @@ export interface Forest {
   url?: string | null;
   checkin?: string | null;
   checkout?: string | null;
+  naver?: { id: string; v: number; b: number; s: number | null } | null; // 네이버 방문자·블로그 리뷰 수, 별점
   goods: Goods[];
 }
 
@@ -116,7 +117,7 @@ export interface Filters {
   weekend: boolean;
   wait: boolean;
   q: string;
-  sort: 'date' | 'count' | 'name' | 'dist';
+  sort: 'date' | 'count' | 'name' | 'dist' | 'review';
 }
 
 // 오늘처럼 모든 객실이 '정보 없음'인 앞쪽 날짜는 건너뛴다
@@ -253,7 +254,8 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
     count: (a: ForestResult, b: ForestResult) => b.total - a.total,
     name: (a: ForestResult, b: ForestResult) => a.forest.name.localeCompare(b.forest.name, 'ko'),
     dist: (a: ForestResult, b: ForestResult) => (a.dist ?? 1e9) - (b.dist ?? 1e9),
-  }[f.sort];
+    review: (a: ForestResult, b: ForestResult) => reviewTotal(b.forest) - reviewTotal(a.forest),
+  }[f.sort] || ((a: ForestResult, b: ForestResult) => a.first - b.first);
   return out.sort((a, b) => (b.total ? 1 : 0) - (a.total ? 1 : 0) || by(a, b));
 }
 
@@ -274,3 +276,17 @@ export const kindName = (k: string) => (k === '01' ? '숙소' : '야영장');
 
 export const cellClass = (c: string) =>
   c === 'A' ? 's-A' : c >= '1' && c <= '9' ? 's-W' : c === 'F' ? 's-F' : c === 'C' ? 's-C' : c === 'R' ? 's-R' : c === 'P' ? 's-P' : 's-0';
+
+// ---- 네이버 리뷰 ----
+export const reviewTotal = (f: Forest) => (f.naver ? f.naver.v + f.naver.b : 0);
+export const naverPlaceUrl = (f: Forest) =>
+  f.naver ? `https://m.place.naver.com/place/${f.naver.id}/review/visitor` : `https://map.naver.com/p/search/${encodeURIComponent(f.name)}`;
+export const compactNum = (n: number) => (n >= 10000 ? `${(n / 10000).toFixed(1).replace(/\.0$/, '')}만` : n.toLocaleString());
+
+export const SORTS: { value: Filters['sort']; label: string }[] = [
+  { value: 'date', label: '가까운 날짜순' },
+  { value: 'count', label: '빈자리 많은 순' },
+  { value: 'review', label: '리뷰 많은 순' },
+  { value: 'name', label: '이름순' },
+  { value: 'dist', label: '가까운 거리순' },
+];

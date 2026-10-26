@@ -11,6 +11,8 @@ GitHub Actions (3시간마다)
                                                               └─ Vercel 자동 배포 (CDN 정적 서빙)
 로그인된 Aside 브라우저 (월 1회, 수동)
   └─ collector/refresh-master.sh ──▶ data/master.json (휴양림·객실 ID, 좌표)
+로컬 (월 1회, 수동)
+  └─ node collector/naver-reviews.mjs ──▶ data/naver.json (네이버 방문자·블로그 리뷰 수)
 ```
 
 - DB, 서버 없이 운영합니다. 데이터는 하나의 JSON(약 1MB, gzip 약 150KB)이고, 필터링은 브라우저에서 합니다.
@@ -21,6 +23,7 @@ GitHub Actions (3시간마다)
 | `collector/crawl.mjs` | 상태 수집. 의존성 없음, Node 20+ |
 | `collector/master.repl.js` / `master.poll.js` | Aside REPL로 시도별 객실 ID 수집 (로그인 세션) |
 | `collector/build-master.mjs` | 마스터 병합, 공식 좌표·주소·전화번호 보강 |
+| `collector/naver-reviews.mjs` | 네이버 모바일 검색의 플레이스 정보에서 리뷰 수·별점 수집. 기존 값은 건너뛰고 `--force`로 전체 갱신 |
 | `data/master.json` | 휴양림 185곳 · 객실 7,464개 (2026-10-26 기준) |
 | `web/` | Vite + React + TS, MapLibre(OpenFreeMap), TanStack Virtual |
 | `.github/workflows/crawl.yml` | 정기 수집 → 커밋 → Vercel 배포 |

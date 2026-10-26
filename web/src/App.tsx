@@ -96,17 +96,16 @@ export default function App() {
               <svg viewBox="0 0 32 32"><path d="M16 3l-8 11h4.5l-6 8H13v6h6v-6h6.5l-6-8H24z" fill="#e8f3ea" /></svg>
             </span>
             <span>
-              <b>숲빈자리</b>
-              <small className="hide-sm"> · 전국 자연휴양림 빈자리 찾기</small>
+              <h1 className="brand-name">숲빈자리<small className="hide-sm"> · 전국 자연휴양림 빈자리 찾기</small></h1>
             </span>
           </a>
           <span className="spacer" />
           {status && (
             <span className="stamp" title={status.generatedAt}>
-              🕒 수집 {new Date(status.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              <span aria-hidden>🕒</span> 수집 {new Date(status.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
-          <button className="icon-btn" onClick={toggleTheme} aria-label="라이트/다크 전환">◐</button>
+          <button className="icon-btn" onClick={toggleTheme} aria-label="라이트/다크 모드 전환"><span aria-hidden>◐</span></button>
         </div>
       </header>
 
@@ -126,7 +125,7 @@ export default function App() {
             />
             <div className="tabs" role="tablist">
               {VIEWS.map((v) => (
-                <button key={v.id} role="tab" aria-selected={filters.view === v.id} onClick={() => set({ view: v.id })}>
+                <button key={v.id} role="tab" id={`tab-${v.id}`} aria-selected={filters.view === v.id} onClick={() => set({ view: v.id })}>
                   {v.label}
                 </button>
               ))}
@@ -134,6 +133,9 @@ export default function App() {
                 조건에 맞는 휴양림 <b>{withHits.length}</b>곳 · 객실·날짜 <b>{withHits.reduce((n, r) => n + r.total, 0).toLocaleString()}</b>건
               </span>
             </div>
+            <p className="mobile-count" aria-live="polite">
+              조건에 맞는 휴양림 <b>{withHits.length}</b>곳 · 객실·날짜 <b>{withHits.reduce((n, r) => n + r.total, 0).toLocaleString()}</b>건
+            </p>
             {filters.view === 'table' && <TableView results={results} status={status} filters={filters} set={set} onOpen={setForestId} />}
             {filters.view === 'map' && (
               <Suspense fallback={<div className="panel loading">지도를 불러오는 중…</div>}>

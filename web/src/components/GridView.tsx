@@ -16,7 +16,8 @@ type Row =
   | { t: 'f'; r: ForestResult; n: number }
   | { t: 'g'; r: ForestResult; g: Goods; hits: Set<number> };
 
-const NAME_W = 210;
+// 모바일에서는 이름 열을 좁혀 날짜 칸이 더 보이게 한다
+const NAME_W = typeof matchMedia !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 132 : 210;
 const CELL_W = 34;
 const ROW_H = 28;
 
