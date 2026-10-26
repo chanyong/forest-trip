@@ -90,6 +90,7 @@ export function GridView({ results, status, filters, onOpen }: Props) {
           <span><b className="s-F">완</b>완료</span>
           <span><b className="s-C">휴</b>휴무</span>
           <span><b className="s-R">공</b>공사·점검</span>
+          <span><b className="s-P">추</b>추첨·우선예약</span>
           <span><b className="s-A s-hit" />조건 충족 체크인</span>
         </span>
         <span className="sp" />

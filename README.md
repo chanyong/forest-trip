@@ -27,10 +27,10 @@ GitHub Actions (3시간마다)
 
 ## 상태 코드 (`status.json`의 `s` 문자열, 날짜당 1글자)
 
-`A` 예약가능 · `1`~`9` 대기(다음 대기 순번) · `F` 완료 · `C` 휴무 · `R` 공사/점검 · `.` 기간 밖
+`A` 예약가능 · `1`~`9` 대기(다음 대기 순번) · `F` 완료 · `C` 휴무 · `R` 공사/점검 · `P` 추첨·우선예약 기간 · `.` 기간 밖
 
 숲나들e 응답 매핑: `rsrvtAvail=Y`이고 `rsrvtCnt=0`이면 `A`. 예약이 있고 `wtngCnt < goodsMxmmWtngCnt`이면 대기, 그 밖은 `F`.
-`PRNSL_DAY`는 `C`, `REPAIR`는 `R`, `BEFORE_DATE`/`OVER_DATE`는 `.`.
+`PRNSL_DAY`는 `C`, `REPAIR`는 `R`, `DRLTS`/`PRIOR`는 `P`, `BEFORE_DATE`/`OVER_DATE`는 `.`.
 
 ## 로컬 실행
 

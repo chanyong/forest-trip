@@ -81,7 +81,7 @@ class Session {
 }
 
 // ---- 상태 인코딩: 날짜당 1글자 ----
-// A 예약가능 · 1~9 대기(다음 대기 순번) · F 완료 · C 휴무 · R 공사/점검 · . 기간 밖/정보 없음
+// A 예약가능 · 1~9 대기(다음 대기 순번) · F 완료 · C 휴무 · R 공사/점검 · P 추첨·우선예약 · . 기간 밖/정보 없음
 const unknownCodes = new Map();
 function encode(r) {
   switch (r.rsrvtAvail) {
@@ -94,6 +94,8 @@ function encode(r) {
     }
     case 'PRNSL_DAY': return 'C';
     case 'REPAIR': return 'R';
+    case 'DRLTS': // 추첨제 기간
+    case 'PRIOR': return 'P'; // 우선예약 기간
     case 'BEFORE_DATE':
     case 'OVER_DATE': return '.';
     default:

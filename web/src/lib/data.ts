@@ -10,7 +10,7 @@ export interface Goods {
   area: string;
   flags: string; // a 에어컨, d 반려견, e 전기, w 온수, h 장애인, v 바우처
   maxNights: number | null;
-  s: string; // 날짜당 1글자: A 가능, 1~9 대기, F 완료, C 휴무, R 공사, . 정보 없음
+  s: string; // 날짜당 1글자: A 가능, 1~9 대기, F 완료, C 휴무, R 공사, P 추첨·우선예약, . 정보 없음
 }
 
 export interface Forest {
@@ -265,12 +265,12 @@ export function haversine(a: { lat: number; lng: number }, b: { lat: number; lng
 }
 
 export const statusLabel = (c: string) =>
-  c === 'A' ? '예약가능' : c >= '1' && c <= '9' ? `대기${c}` : c === 'F' ? '완료' : c === 'C' ? '휴무' : c === 'R' ? '공사·점검' : '-';
+  c === 'A' ? '예약가능' : c >= '1' && c <= '9' ? `대기${c}` : c === 'F' ? '완료' : c === 'C' ? '휴무' : c === 'R' ? '공사·점검' : c === 'P' ? '추첨·우선예약' : '-';
 export const statusShort = (c: string) =>
-  c === 'A' ? '예' : c >= '1' && c <= '9' ? `대${c}` : c === 'F' ? '완' : c === 'C' ? '휴' : c === 'R' ? '공' : '';
+  c === 'A' ? '예' : c >= '1' && c <= '9' ? `대${c}` : c === 'F' ? '완' : c === 'C' ? '휴' : c === 'R' ? '공' : c === 'P' ? '추' : '';
 
 export const RESERVE_URL = 'https://www.foresttrip.go.kr/rep/or/sssn/monthRsrvtStatus.do?hmpgId=FRIP&menuId=001004';
 export const kindName = (k: string) => (k === '01' ? '숙소' : '야영장');
 
 export const cellClass = (c: string) =>
-  c === 'A' ? 's-A' : c >= '1' && c <= '9' ? 's-W' : c === 'F' ? 's-F' : c === 'C' ? 's-C' : c === 'R' ? 's-R' : 's-0';
+  c === 'A' ? 's-A' : c >= '1' && c <= '9' ? 's-W' : c === 'F' ? 's-F' : c === 'C' ? 's-C' : c === 'R' ? 's-R' : c === 'P' ? 's-P' : 's-0';
