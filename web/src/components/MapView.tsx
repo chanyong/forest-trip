@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { maplibregl, MAP_STYLE } from '../lib/maplibre';
 import { addDaysISO, fmtDate, isoOf, type Filters, type ForestResult, type Status } from '../lib/data';
 
 interface Props {
@@ -12,8 +11,6 @@ interface Props {
   locate: () => void;
 }
 
-// OpenFreeMap: 무료·무키 벡터 타일
-const STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const level = (n: number) => (n === 0 ? 'z' : n < 5 ? 'l' : n < 30 ? 'm' : 'h');
@@ -31,7 +28,7 @@ export function MapView({ results, status, origin, onOpen, locate }: Props) {
     if (!box.current) return;
     const m = new maplibregl.Map({
       container: box.current,
-      style: STYLE,
+      style: MAP_STYLE,
       center: [127.8, 36.2],
       zoom: 6.2,
       minZoom: 5,

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import * as maplibregl from 'maplibre-gl';
+import { maplibregl, MAP_STYLE } from '../lib/maplibre';
 import {
   addDaysISO, cellClass, dow, DOW, FLAG_LABELS, goodsPasses, holidayName, isoOf, isOpen, isWeekendStay, kindName,
   RESERVE_URL, statusLabel, statusShort, type Filters, type Forest, type Status,
@@ -26,7 +26,7 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
   useEffect(() => {
     if (!mapBox.current || f.lat == null || f.lng == null) return;
     const m = new maplibregl.Map({
-      container: mapBox.current, style: 'https://tiles.openfreemap.org/styles/positron',
+      container: mapBox.current, style: MAP_STYLE,
       center: [f.lng, f.lat], zoom: 10, attributionControl: { compact: true },
     });
     new maplibregl.Marker({ color: '#1f5f3f' }).setLngLat([f.lng, f.lat]).addTo(m);
