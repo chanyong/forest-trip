@@ -1,4 +1,4 @@
-// 숲빈자리 오픈 전 통합 QC 자동 점검
+// 숲가자 오픈 전 통합 QC 자동 점검
 import { chromium, webkit, firefox } from 'playwright-core';
 import fs from 'node:fs';
 
@@ -173,7 +173,7 @@ async function interactionChecks(b) {
   const res = await p.goto(`${BASE}/no-such-page`, { waitUntil: 'networkidle' });
   const body404 = await p.evaluate(() => document.body.innerText.slice(0, 200));
   if (res.status() !== 404) log('Minor', '운영', W, `없는 주소 응답 코드 ${res.status()} (404 아님)`);
-  if (!/홈|숲빈자리/.test(body404)) log('Minor', '운영', W, `전용 404 페이지 없음: "${body404.slice(0, 60)}"`);
+  if (!/홈|숲가자/.test(body404)) log('Minor', '운영', W, `전용 404 페이지 없음: "${body404.slice(0, 60)}"`);
 
   // SEO·메타
   await p.goto(BASE, { waitUntil: 'networkidle' });

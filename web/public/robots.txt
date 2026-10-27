@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://forest-trip-seven.vercel.app/sitemap.xml
+Sitemap: https://supgaja.com/sitemap.xml

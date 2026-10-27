@@ -164,7 +164,7 @@ export default function App() {
               <svg viewBox="0 0 32 32"><path d="M16 3l-8 11h4.5l-6 8H13v6h6v-6h6.5l-6-8H24z" fill="#e8f3ea" /></svg>
             </span>
             <span>
-              <h1 className="brand-name">숲빈자리<small className="hide-sm"> · 전국 자연휴양림 예약 빈자리 찾기</small></h1>
+              <h1 className="brand-name">숲가자<small className="hide-sm"> · 전국 자연휴양림 예약 빈자리 찾기</small></h1>
             </span>
           </a>
           <span className="spacer" />
@@ -253,7 +253,7 @@ export default function App() {
         )}
         <footer>
           <p>
-            숲빈자리는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 주기적으로 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다.
+            숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 주기적으로 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다.
             국립자연휴양림관리소 및 각 지자체와 제휴하지 않았습니다.
           </p>
           <p>

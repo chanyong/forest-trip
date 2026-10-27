@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://forest-trip-seven.vercel.app/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://forest-trip-seven.vercel.app/?view=map</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://forest-trip-seven.vercel.app/?view=calendar</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://forest-trip-seven.vercel.app/?view=grid</loc><changefreq>hourly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://supgaja.com/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://supgaja.com/?view=map</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://supgaja.com/?view=calendar</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://supgaja.com/?view=grid</loc><changefreq>hourly</changefreq><priority>0.6</priority></url>
 </urlset>

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "setup": "playwright-core install chromium webkit firefox",
-    "qc": "node qc.mjs https://forest-trip-seven.vercel.app",
+    "qc": "node qc.mjs https://supgaja.com",
     "qc:local": "node qc.mjs http://localhost:4173",
     "qc:quick": "QUICK=1 node qc.mjs http://localhost:4173"
   },

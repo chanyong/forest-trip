@@ -73,7 +73,7 @@ export function GridView({ results, status, filters, onOpen }: Props) {
     const csv = '﻿' + lines.map((l) => l.map((c) => `"${c.replaceAll('"', '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    a.download = `숲빈자리_${addDaysISO(start, lo)}_${addDaysISO(start, hi)}.csv`;
+    a.download = `숲가자_${addDaysISO(start, lo)}_${addDaysISO(start, hi)}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
