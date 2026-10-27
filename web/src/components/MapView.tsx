@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { maplibregl, MAP_STYLE } from '../lib/maplibre';
-import { addDaysISO, compactNum, fmtDate, isoOf, reviewTotal, type Filters, type ForestResult, type Status } from '../lib/data';
+import { addDaysISO, byPrice, compactNum, fmtDate, fmtWon, isoOf, kindName, reviewTotal, type Filters, type ForestResult, type Status } from '../lib/data';
 import { Reviews } from './Reviews';
 import { RateBars } from './Rate';
+import { Price } from './Price';
 
 interface Props {
   results: ForestResult[];
@@ -23,7 +24,8 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
   const markers = useRef<maplibregl.Marker[]>([]);
   const [bounds, setBounds] = useState<maplibregl.LngLatBounds | null>(null);
   const [sel, setSel] = useState<string | null>(null);
-  const [order, setOrder] = useState<'count' | 'review'>('count');
+  type Order = 'count' | 'review' | 'price';
+  const [order, setOrder] = useState<Order>('count');
   const start = isoOf(status.start);
   const located = useMemo(() => results.filter((r) => r.forest.lat != null && r.forest.lng != null), [results]);
 
@@ -71,6 +73,7 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
         `<small>${esc(r.forest.sigungu)}</small>` +
         (r.forest.naver ? ` <small>· 네이버 ${r.forest.naver.s ? '★' + r.forest.naver.s.toFixed(2) + ' ' : ''}리뷰 ${compactNum(r.forest.naver.v)}</small>` : '') + '<br/>' +
         `가능 ${r.total}건 · 가장 가까운 날 ${first}` +
+        (r.prices.length ? `<br/><small>주말 평균 ${r.prices.map((p) => `${kindName(p.kind)} ${fmtWon(p.won)}`).join(' · ')}</small>` : '') +
         (r.rate.we != null ? `<br/><small>예약률 주말 ${r.rate.we}% · 평일 ${r.rate.wd ?? '-'}%</small>` : ''),
       );
       const mk = new maplibregl.Marker({ element: el }).setLngLat([r.forest.lng!, r.forest.lat!]).setPopup(popup).addTo(m);
@@ -100,7 +103,11 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
 
   const inView = located
     .filter((r) => !bounds || bounds.contains([r.forest.lng!, r.forest.lat!]))
-    .sort(order === 'review' ? (a, b) => reviewTotal(b.forest) - reviewTotal(a.forest) : (a, b) => b.total - a.total);
+    .sort({
+      count: (a: ForestResult, b: ForestResult) => b.total - a.total,
+      review: (a: ForestResult, b: ForestResult) => reviewTotal(b.forest) - reviewTotal(a.forest),
+      price: (a: ForestResult, b: ForestResult) => byPrice(a, b) || b.total - a.total,
+    }[order]);
 
   const focus = (r: ForestResult) => {
     setSel(r.forest.id);
@@ -114,9 +121,10 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
         <div className="mapside">
           <div className="hd">
             <span>지도 영역 안 <b>{inView.length}</b>곳</span>
-            <select aria-label="목록 정렬" value={order} onChange={(e) => setOrder(e.target.value as 'count' | 'review')}>
+            <select aria-label="목록 정렬" value={order} onChange={(e) => setOrder(e.target.value as Order)}>
               <option value="count">빈자리 많은 순</option>
               <option value="review">리뷰 많은 순</option>
+              <option value="price">주말 요금 낮은 순</option>
             </select>
             <button className="chip ghost" onClick={locate}><span aria-hidden>📍</span> 내 주변</button>
           </div>
@@ -132,6 +140,7 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
               </button>
               <div className="item-sub">
                 <RateBars rate={r.rate} />
+                <Price prices={r.prices} />
               </div>
               <div className="item-sub">
                 <Reviews forest={r.forest} />

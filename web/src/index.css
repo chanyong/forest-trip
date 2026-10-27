@@ -270,6 +270,7 @@ a { color: var(--brand); }
 .grow-f { display: grid; background: var(--surface-2); }
 .gname.forest button + button { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* 주말 1박 평균 요금 */
+.ftable td.c-price { white-space: nowrap; }
 .gprice { flex: none; font-size: 11px; font-weight: 700; color: var(--brand); background: var(--brand-soft); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
 .gname .gprice { margin-left: auto; }
 @media (max-width: 640px) { .gname.forest .fsub { display: none; } }
@@ -346,7 +347,7 @@ button:disabled { cursor: default; opacity: 0.5; }
 .mapside .hd .chip { height: 30px; }
 .mapside .item { padding: 0; }
 .mapside .item-main { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 10px 14px 2px; }
-.mapside .item-sub { display: flex; align-items: center; gap: 10px; padding: 0 14px 8px; }
+.mapside .item-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 0 14px 8px; }
 .mapside .item-sub .rv { margin: 0; flex: 1; }
 
 /* ---- 달력 날짜 목록 ---- */
@@ -419,8 +420,8 @@ button:disabled { cursor: default; opacity: 0.5; }
   .field.sel select { flex: 1; }
   .frow .chip { flex: 0 1 auto; padding: 0 12px; }
   .m-only { display: inline; }
-  .ftable td.c-first, .ftable td.c-count { display: inline-flex; align-items: baseline; gap: 6px; margin-right: 14px; }
-  .ftable td.c-first::before, .ftable td.c-count::before { content: attr(data-label); font-size: 12px; color: var(--ink-3); }
+  .ftable td.c-first, .ftable td.c-count, .ftable td.c-price { display: inline-flex; align-items: baseline; gap: 6px; margin-right: 14px; }
+  .ftable td.c-first::before, .ftable td.c-count::before, .ftable td.c-price::before { content: attr(data-label); font-size: 12px; color: var(--ink-3); }
   .ftable td.c-count .fsub { display: inline; }
   .ftable .num { font-size: 15px; }
 }

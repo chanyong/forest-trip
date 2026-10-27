@@ -111,7 +111,7 @@ export interface Filters {
   q: string;
   weRate: RateCond; // 주말 예약률 조건
   wdRate: RateCond; // 평일 예약률 조건
-  sort: 'date' | 'count' | 'name' | 'dist' | 'review' | 'popular';
+  sort: 'date' | 'count' | 'name' | 'dist' | 'review' | 'popular' | 'price';
 }
 
 // 오늘처럼 모든 객실이 '정보 없음'인 앞쪽 날짜는 건너뛴다
@@ -195,6 +195,8 @@ export interface ForestResult {
   first: number;
   dist?: number;
   rate: Rate;
+  prices: KindPrice[]; // 시설별 주말 평균 요금(고른 시설만)
+  price: KindPrice | null; // 가격순 정렬 기준: 숙소 평균, 숙소가 없으면 야영장 평균
 }
 
 export function goodsPasses(g: Goods, f: Filters) {
@@ -280,7 +282,9 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
         if (hits[0] < first) first = hits[0];
       }
     }
-    const r: ForestResult = { forest: fo, goods, hitDates, total, first, rate };
+    const prices = pricesOf(fo, f.kinds);
+    const price = prices.find((p) => p.kind === '01') ?? prices[0] ?? null;
+    const r: ForestResult = { forest: fo, goods, hitDates, total, first, rate, prices, price };
     if (origin && fo.lat != null && fo.lng != null) r.dist = haversine(origin, { lat: fo.lat, lng: fo.lng! });
     out.push(r);
   }
@@ -291,6 +295,7 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
     dist: (a: ForestResult, b: ForestResult) => (a.dist ?? 1e9) - (b.dist ?? 1e9),
     review: (a: ForestResult, b: ForestResult) => reviewTotal(b.forest) - reviewTotal(a.forest),
     popular: (a: ForestResult, b: ForestResult) => (b.rate.we ?? -1) - (a.rate.we ?? -1) || (b.rate.wd ?? -1) - (a.rate.wd ?? -1),
+    price: (a: ForestResult, b: ForestResult) => byPrice(a, b) || a.first - b.first,
   }[f.sort === 'dist' && !origin ? 'date' : f.sort] || ((a: ForestResult, b: ForestResult) => a.first - b.first);
   return out.sort((a, b) => (b.total ? 1 : 0) - (a.total ? 1 : 0) || by(a, b));
 }
@@ -324,6 +329,18 @@ export function weekendPriceOf(fo: Forest, kinds: Kind[]): number | null {
   }
   return n ? Math.round(sum / n / 100) * 100 : null;
 }
+// 숙소와 야영장은 요금 차이가 커서 시설별로 따로 평균 낸다(시설 조건이 있으면 그 시설만)
+export interface KindPrice { kind: Kind; won: number }
+export function pricesOf(fo: Forest, kinds: Kind[]): KindPrice[] {
+  return (['01', '02'] as const)
+    .filter((k) => !kinds.length || kinds.includes(k))
+    .map((k) => ({ kind: k, won: weekendPriceOf(fo, [k]) }))
+    .filter((p): p is KindPrice => p.won != null);
+}
+// 가격순: 숙소와 야영장 요금을 섞어 비교하지 않도록 숙소 있는 곳을 먼저, 야영장만 있는 곳을 그다음, 요금 정보 없는 곳을 맨 뒤에 둔다
+const priceRank = (r: ForestResult) => (r.price ? (r.price.kind === '01' ? 0 : 1) : 2);
+export const byPrice = (a: ForestResult, b: ForestResult) =>
+  priceRank(a) - priceRank(b) || (a.price?.won ?? 0) - (b.price?.won ?? 0);
 export const fmtWon = (n: number) => (n >= 10000 ? `${(n / 10000).toFixed(1).replace(/\.0$/, '')}만원` : `${n.toLocaleString()}원`);
 
 // ---- 네이버 리뷰 ----
@@ -337,6 +354,7 @@ export const SORTS: { value: Filters['sort']; label: string }[] = [
   { value: 'count', label: '빈자리 많은 순' },
   { value: 'review', label: '리뷰 많은 순' },
   { value: 'popular', label: '주말 예약률 높은 순' },
+  { value: 'price', label: '주말 요금 낮은 순' },
   { value: 'name', label: '이름순' },
   { value: 'dist', label: '가까운 거리순' },
 ];

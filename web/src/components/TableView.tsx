@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { addDaysISO, fmtDate, holidayName, isoOf, isRestDay, kindName, SORTS, type Filters, type ForestResult, type Status } from '../lib/data';
 import { Reviews } from './Reviews';
 import { RateBars } from './Rate';
+import { Price } from './Price';
 
 interface Props {
   results: ForestResult[];
@@ -70,6 +71,7 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
             <th>{sortBtn('name', '휴양림')}</th>
             <th>{sortBtn('date', '가장 가까운 날짜')}</th>
             <th>{sortBtn('count', '가능 건수')}</th>
+            <th>{sortBtn('price', '주말 요금')}</th>
             <th>{sortBtn('popular', '예약률')}</th>
             <th>예약 가능 체크인 날짜</th>
             <th>{hasDist ? '내 위치에서' : <span className="sr-only">객실별 보기</span>}</th>
@@ -95,6 +97,9 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
                 <td className="c-count" data-label="가능">
                   <span className="num">{r.total}<span className="m-only">건</span></span>
                   <div className="fsub">{r.goods.length}개 객실</div>
+                </td>
+                <td className="c-price" data-label="요금">
+                  {r.prices.length ? <Price prices={r.prices} /> : <span className="fsub">요금 정보 없음</span>}
                 </td>
                 <td className="c-rate"><RateBars rate={r.rate} /></td>
                 <td style={{ width: '46%' }}>

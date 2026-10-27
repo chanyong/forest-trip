@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
-  addDaysISO, cellClass, diffISO, dow, DOW, fmtWon, goodsPasses, holidayName, isoOf, kindName, statusLabel, statusShort, weekendPriceOf,
+  addDaysISO, cellClass, diffISO, dow, DOW, fmtWon, goodsPasses, holidayName, isoOf, statusLabel, statusShort,
   type Filters, type ForestResult, type Goods, type Status,
 } from '../lib/data';
+import { Price } from './Price';
 
 interface Props {
   results: ForestResult[];
@@ -122,22 +123,13 @@ export function GridView({ results, status, filters, onOpen }: Props) {
                 const style = { position: 'absolute' as const, top: 0, left: 0, width, transform: `translateY(${vi.start}px)`, gridTemplateColumns: template };
                 if (row.t === 'f') {
                   const f = row.r.forest;
-                  // 숙소와 야영장은 요금 차이가 커서 시설별로 따로 평균 낸다
-                  const prices = (['01', '02'] as const)
-                    .filter((k) => !filters.kinds.length || filters.kinds.includes(k))
-                    .map((k) => [k, weekendPriceOf(f, [k])] as const)
-                    .filter(([, p]) => p != null);
                   return (
                     <div key={'f' + f.id} className="grow-f" style={style}>
                       <div className="gname forest" title={f.name}>
                         <button onClick={() => toggle(f.id)} aria-label="접기/펼치기">{collapsed.has(f.id) ? '▸' : '▾'}</button>
                         <button onClick={() => onOpen(f.id)}>{f.name}</button>
                         <span className="fsub">{row.n}</span>
-                        {prices.length > 0 && (
-                          <span className="gprice" title={`주말 1박 평균 요금(비수기 주말 기준) · ${prices.map(([k, p]) => `${kindName(k)} ${fmtWon(p!)}`).join(' · ')}`}>
-                            {prices.length === 1 ? `주말 ${fmtWon(prices[0][1]!)}` : prices.map(([k, p]) => `${k === '01' ? '숙소' : '야영'} ${fmtWon(p!).replace('원', '')}`).join(' · ')}
-                          </span>
-                        )}
+                        <Price prices={row.r.prices} />
                       </div>
                       {cols.map((i) => {
                         const n = row.r.hitDates.get(i);
