@@ -39,8 +39,8 @@ export function Summary({ status, changes, onOpen }: Props) {
   return (
     <>
       <section className="summary" aria-label="요약">
-        <div className="stat"><div className="k">수집 휴양림</div><div className="v">{status.forests.length}<small>곳</small></div></div>
-        <div className="stat"><div className="k">객실·사이트</div><div className="v">{stats.goods.toLocaleString()}<small>개</small></div></div>
+        <div className="stat stat-static"><div className="k">수집 휴양림</div><div className="v">{status.forests.length}<small>곳</small></div></div>
+        <div className="stat stat-static"><div className="k">객실·사이트</div><div className="v">{stats.goods.toLocaleString()}<small>개</small></div></div>
         <div className="stat"><div className="k">예약가능 객실·날짜</div><div className="v">{stats.open.toLocaleString()}<small>건 · {status.days}일</small></div></div>
         <div className="stat">
           <div className="k">이번 주말 {fmtDate(stats.fri, false)}~{fmtDate(addDaysISO(stats.fri, 1), false)} 체크인</div>

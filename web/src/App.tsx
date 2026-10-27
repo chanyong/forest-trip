@@ -21,6 +21,15 @@ const takeStatusReq = (): Promise<Response> => {
   return req ? req.catch(() => fetch('/data/status.json')) : fetch('/data/status.json');
 };
 
+// 네트워크가 멈춰도 로딩 화면에 갇히지 않도록 일정 시간이 지나면 실패로 처리한다
+const LOAD_TIMEOUT_MS = 30000;
+const withTimeout = <T,>(p: Promise<T>) =>
+  Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('응답 시간 초과')), LOAD_TIMEOUT_MS))]);
+
+// 수집 주기는 약 3시간. 6시간 넘게 묵으면 수집이 밀린 것으로 보고 알린다
+const STALE_MIN = 360;
+const ago = (min: number) => (min < 1 ? '방금 전' : min < 60 ? `${min}분 전` : min < 1440 ? `${Math.floor(min / 60)}시간 전` : `${Math.floor(min / 1440)}일 전`);
+
 // 탭 아이콘 (24px 선 아이콘, 색은 CSS의 탭 색을 따른다)
 const ICONS: Record<View, ReactNode> = {
   table: <><path d="M9 6h11M9 12h11M9 18h11" /><circle cx="4.5" cy="6" r="1.2" /><circle cx="4.5" cy="12" r="1.2" /><circle cx="4.5" cy="18" r="1.2" /></>,
@@ -52,7 +61,7 @@ export default function App() {
   const load = useCallback(() => {
     setError('');
     Promise.all([
-      takeStatusReq().then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }),
+      withTimeout(takeStatusReq().then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })),
       fetch('/data/changes.json').then((r) => (r.ok ? r.json() : { items: [] })).catch(() => ({ items: [] })),
       fetch('/data/meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]).then(([s, c, m]: [Status, { items: Change[] }, Meta | null]) => {
@@ -65,6 +74,13 @@ export default function App() {
     }).catch((e) => setError(`데이터를 불러오지 못했습니다 (${e.message})`));
   }, []);
   useEffect(load, [load]);
+
+  // '몇 분 전' 표시를 1분마다 갱신
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     if (theme) document.documentElement.dataset.theme = theme;
@@ -148,15 +164,21 @@ export default function App() {
               <svg viewBox="0 0 32 32"><path d="M16 3l-8 11h4.5l-6 8H13v6h6v-6h6.5l-6-8H24z" fill="#e8f3ea" /></svg>
             </span>
             <span>
-              <h1 className="brand-name">숲빈자리<small className="hide-sm"> · 전국 자연휴양림 빈자리 찾기</small></h1>
+              <h1 className="brand-name">숲빈자리<small className="hide-sm"> · 전국 자연휴양림 예약 빈자리 찾기</small></h1>
             </span>
           </a>
           <span className="spacer" />
-          {status && (
-            <span className="stamp" title={status.generatedAt}>
-              <span aria-hidden>🕒</span> 수집 {new Date(status.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
+          {status && (() => {
+            const age = Math.max(0, Math.round((now - Date.parse(status.generatedAt)) / 60000));
+            const stale = age > STALE_MIN;
+            return (
+              <span className={`stamp${stale ? ' stale' : ''}`}
+                title={`숲나들e 예약현황을 약 3시간마다 모읍니다. 그 사이 예약이 바뀌었을 수 있으니 예약 전에 숲나들e에서 다시 확인하세요.${stale ? ' 최근 수집이 지연되고 있습니다.' : ''}`}>
+                <span aria-hidden>{stale ? '⚠' : '🕒'}</span> 수집<span className="stamp-date"> {new Date(status.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} ·</span>
+                <span className="stamp-ago"> {ago(age)}</span>
+              </span>
+            );
+          })()}
           <button className="icon-btn" onClick={toggleTheme} aria-label="라이트/다크 모드 전환"><span aria-hidden>◐</span></button>
         </div>
       </header>

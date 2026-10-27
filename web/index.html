@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>숲빈자리 · 전국 자연휴양림 빈자리 찾기</title>
-    <meta name="description" content="전국 자연휴양림 숙소·야영장의 예약 가능 날짜를 목록, 지도, 달력, 월간 그리드로 한 번에 찾아보세요. 3시간마다 갱신합니다." />
+    <title>숲빈자리 · 전국 자연휴양림 예약 빈자리 찾기</title>
+    <meta name="description" content="전국 자연휴양림 185곳의 숙소·야영장 예약 빈자리와 취소표를 3시간마다 모아 날짜·지역·인원·주말 요금으로 한 번에 찾습니다. 예약은 숲나들e에서." />
     <link rel="canonical" href="https://forest-trip-seven.vercel.app/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -15,16 +15,17 @@
     <meta property="og:site_name" content="숲빈자리" />
     <meta property="og:locale" content="ko_KR" />
     <meta property="og:url" content="https://forest-trip-seven.vercel.app/" />
-    <meta property="og:title" content="숲빈자리 · 전국 자연휴양림 빈자리 찾기" />
-    <meta property="og:description" content="숲나들e 월별현황을 주기적으로 모아 전국 휴양림 빈자리를 한눈에 보여 줍니다." />
+    <meta property="og:title" content="숲빈자리 · 전국 자연휴양림 예약 빈자리 찾기" />
+    <meta property="og:description" content="전국 휴양림 숙소·야영장 예약 빈자리와 취소표를 3시간마다 모아 한눈에 보여 줍니다." />
     <meta property="og:image" content="https://forest-trip-seven.vercel.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="숲빈자리 - 전국 자연휴양림 빈자리, 한눈에" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="숲빈자리 · 전국 자연휴양림 빈자리 찾기" />
-    <meta name="twitter:description" content="전국 자연휴양림 숙소·야영장의 예약 가능 날짜를 한 번에." />
+    <meta name="twitter:title" content="숲빈자리 · 전국 자연휴양림 예약 빈자리 찾기" />
+    <meta name="twitter:description" content="전국 자연휴양림 숙소·야영장 예약 빈자리를 한 번에." />
     <meta name="twitter:image" content="https://forest-trip-seven.vercel.app/og-image.png" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"숲빈자리","alternateName":"전국 자연휴양림 예약 빈자리 찾기","url":"https://forest-trip-seven.vercel.app/","inLanguage":"ko"}</script>
     <!-- 데이터는 JS 번들을 기다리지 않고 바로 받기 시작한다(앱이 이 요청을 그대로 쓴다) -->
     <script>window.__statusReq = fetch('/data/status.json');</script>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
@@ -33,8 +34,15 @@
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" /></noscript>
   </head>
   <body>
-    <div id="root"><p style="margin:0;padding:96px 16px;text-align:center;color:#646e68;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">숲빈자리 · 전국 휴양림 빈자리를 불러오는 중…</p></div>
-    <noscript>숲빈자리는 JavaScript가 필요합니다. 브라우저 설정에서 JavaScript를 켜 주세요.</noscript>
+    <div id="root">
+      <!-- JS 실행 전과 검색·미리보기 봇에 보이는 소개. 앱이 그려지면 대체된다 -->
+      <div style="max-width:640px;margin:0 auto;padding:72px 16px;text-align:center;color:#4b5650;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.6">
+        <h1 style="margin:0 0 8px;font-size:22px;color:#1d2420">숲빈자리 · 전국 자연휴양림 예약 빈자리 찾기</h1>
+        <p style="margin:0 0 20px">전국 국립·공립·사립 자연휴양림 185곳의 숙소와 야영장 예약 빈자리, 취소표를 숲나들e 예약현황에서 3시간마다 모아 목록·지도·달력·월간 그리드로 보여 줍니다. 주말·연박·인원·편의시설 조건과 주말 요금, 예약률로 골라 보세요.</p>
+        <p style="margin:0;color:#646e68">전국 휴양림 빈자리를 불러오는 중…</p>
+      </div>
+    </div>
+    <noscript><p style="text-align:center">빈자리 검색에는 JavaScript가 필요합니다. 브라우저 설정에서 JavaScript를 켜 주세요. 예약은 <a href="https://www.foresttrip.go.kr">숲나들e</a>에서 할 수 있습니다.</p></noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
