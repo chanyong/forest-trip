@@ -53,5 +53,29 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.supgaja.com"
+        }
+      ],
+      "destination": "https://supgaja.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "forest-trip-seven.vercel.app"
+        }
+      ],
+      "destination": "https://supgaja.com/:path*",
+      "permanent": true
+    }
   ]
 }
