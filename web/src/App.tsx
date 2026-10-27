@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import {
   compute, defaultFilters, firstDataIdx, filtersFromURL, filtersToURL, isoOf,
   type Change, type Filters, type Meta, type Status, type View,
@@ -19,6 +19,14 @@ const takeStatusReq = (): Promise<Response> => {
   const req = w.__statusReq;
   w.__statusReq = undefined;
   return req ? req.catch(() => fetch('/data/status.json')) : fetch('/data/status.json');
+};
+
+// 탭 아이콘 (24px 선 아이콘, 색은 CSS의 탭 색을 따른다)
+const ICONS: Record<View, ReactNode> = {
+  table: <><path d="M9 6h11M9 12h11M9 18h11" /><circle cx="4.5" cy="6" r="1.2" /><circle cx="4.5" cy="12" r="1.2" /><circle cx="4.5" cy="18" r="1.2" /></>,
+  map: <><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.3" /></>,
+  calendar: <><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /><path d="M8 14.5h2M14 14.5h2" /></>,
+  grid: <><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></>,
 };
 
 const VIEWS: { id: View; label: string }[] = [
@@ -183,8 +191,11 @@ export default function App() {
             />
             <div className="tabs" role="tablist" aria-label="보기 방식" onKeyDown={onTabKey}>
               {VIEWS.map((v) => (
-                <button key={v.id} role="tab" id={`tab-${v.id}`} aria-selected={filters.view === v.id} aria-controls="view-panel"
+                <button key={v.id} role="tab" id={`tab-${v.id}`} className={`v-${v.id}`} aria-selected={filters.view === v.id} aria-controls="view-panel"
                   tabIndex={filters.view === v.id ? 0 : -1} onClick={() => set({ view: v.id })}>
+                  <span className="tab-ico" aria-hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS[v.id]}</svg>
+                  </span>
                   {v.label}
                 </button>
               ))}

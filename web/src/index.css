@@ -18,6 +18,7 @@
   --closed: #b9b3a3;
   --sat: #2457b0;
   --sun: #a32724;
+  --violet: #6a4bb0;
   --shadow: 0 1px 2px rgba(20, 30, 25, 0.06), 0 4px 16px rgba(20, 30, 25, 0.05);
   --radius: 12px;
   color-scheme: light;
@@ -44,6 +45,7 @@
     --closed: #5b605a;
     --sat: #9bbcf6;
     --sun: #ff9e9e;
+    --violet: #b9a5f2;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     color-scheme: dark;
   }
@@ -68,6 +70,7 @@
   --closed: #5b605a;
   --sat: #9bbcf6;
   --sun: #ff9e9e;
+  --violet: #b9a5f2;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   color-scheme: dark;
 }
@@ -145,9 +148,29 @@ a { color: var(--brand); }
 }
 
 /* view tabs */
-.tabs { display: flex; gap: 4px; margin: 16px 0 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--ink-3); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-.tabs button[aria-selected='true'] { color: var(--ink); border-color: var(--brand); }
+/* 탭마다 고유 색(--c)과 아이콘으로 구분한다 */
+.tabs { display: flex; gap: 6px; margin: 16px 0 12px; padding: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button {
+  --c: var(--brand);
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid transparent; border-radius: 9px; background: none; padding: 8px 14px;
+  font-weight: 600; color: var(--ink-2); white-space: nowrap; transition: background .15s, color .15s, box-shadow .15s;
+}
+.tabs button.v-map { --c: var(--sat); }
+.tabs button.v-calendar { --c: var(--wait); }
+.tabs button.v-grid { --c: var(--violet); }
+.tabs .tab-ico {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; flex: none;
+  color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent);
+}
+.tabs .tab-ico svg { width: 16px; height: 16px; }
+.tabs button:hover { background: color-mix(in srgb, var(--c) 8%, var(--surface)); color: var(--ink); }
+.tabs button[aria-selected='true'] {
+  background: var(--surface); color: var(--c); border-color: color-mix(in srgb, var(--c) 45%, transparent);
+  box-shadow: 0 1px 2px rgba(20, 30, 25, .08), inset 0 -3px 0 var(--c);
+}
+.tabs button[aria-selected='true'] .tab-ico { background: var(--c); color: var(--surface); }
 .tabs .count { margin-left: auto; align-self: center; font-size: 13px; color: var(--ink-3); white-space: nowrap; padding-left: 12px; }
 
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -237,6 +260,11 @@ a { color: var(--brand); }
 .gname.forest { font-weight: 700; background: var(--surface-2); font-size: 13px; }
 .gname.forest button { border: 0; background: none; padding: 0; font-weight: 700; }
 .grow-f { display: grid; background: var(--surface-2); }
+.gname.forest button + button { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* 주말 1박 평균 요금 */
+.gprice { flex: none; font-size: 11px; font-weight: 700; color: var(--brand); background: var(--brand-soft); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+.gname .gprice { margin-left: auto; }
+@media (max-width: 640px) { .gname.forest .fsub { display: none; } }
 .grow-g { display: grid; }
 .s-A { background: var(--open-soft); color: var(--open); font-weight: 700; }
 .s-W { background: var(--wait-soft); color: var(--wait); }
@@ -354,7 +382,8 @@ button:disabled { cursor: default; opacity: 0.5; }
   .chip { height: 40px; }
   .dd-pop { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; max-height: 70vh; overflow-y: auto; }
   .tabs .count { display: none; }
-  .tabs button { flex: 1; padding: 12px 8px; }
+  .tabs { gap: 4px; }
+  .tabs button { flex: 1; flex-direction: column; gap: 3px; padding: 6px 4px; font-size: 13px; }
   .summary { margin-top: 14px; }
   .stat { padding: 10px 12px; }
   .ftable tr { padding: 12px; }
@@ -414,7 +443,7 @@ button:disabled { cursor: default; opacity: 0.5; }
 .rate-item.mid .rate-bar i { background: var(--ink-3); }
 .rate-item.cool b { color: var(--open); } .rate-item.cool .rate-bar i { background: var(--open); }
 .ftable td.c-rate .rate { flex-direction: column; align-items: flex-start; gap: 4px; }
-.drawer-rate { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.drawer-rate { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 2px; }
 @media (max-width: 760px) { .ftable td.c-rate .rate { flex-direction: row; } }
 
 /* ---- QC: 공통 ---- */
