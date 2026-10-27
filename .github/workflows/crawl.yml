@@ -2,7 +2,8 @@ name: crawl
 
 on:
   schedule:
-    - cron: '7 */3 * * *' # 3시간마다 (UTC)
+    # GitHub 예약 실행은 지연·누락이 잦아 매시간 깨우고, 데이터가 2시간 30분 이상 묵었을 때만 수집한다(약 3시간 주기)
+    - cron: '7 * * * *'
   workflow_dispatch:
     inputs:
       limit:
@@ -25,16 +26,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: 데이터 신선도 확인
+        id: fresh
+        run: |
+          age=$(node -e "const m=require('./web/public/data/meta.json');console.log(Math.round((Date.now()-Date.parse(m.generatedAt))/60000))" 2>/dev/null || echo 9999)
+          echo "마지막 수집 후 ${age}분"
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$age" -lt 150 ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; fi
       - name: 상태 수집
+        if: steps.fresh.outputs.skip != 'true'
         env:
           LIMIT_FORESTS: ${{ github.event.inputs.limit || '0' }}
         run: node collector/crawl.mjs
       - name: 수집 결과 요약
-        if: always()
+        if: always() && steps.fresh.outputs.skip != 'true'
         run: |
           f=web/public/data/meta.json; [ -f web/public/data/meta.failed.json ] && f=web/public/data/meta.failed.json
           node -e "const m=require('./'+process.argv[1]);console.log(JSON.stringify({generatedAt:m.generatedAt,durationSec:m.durationSec,ok:m.ok,fail:m.fail,totals:m.totals,newlyOpened:m.newlyOpened,unknownCodes:m.unknownCodes,failures:m.failures.slice(0,5)},null,1))" "$f" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: 커밋 & 푸시 (Vercel 자동 배포)
+        if: steps.fresh.outputs.skip != 'true'
         run: |
           git config user.name "forest-trip-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
