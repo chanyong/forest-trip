@@ -11,6 +11,7 @@ import { bookingStats, weekendMask } from './stats.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MASTER = path.join(ROOT, 'data/master.json');
 const NAVER = path.join(ROOT, 'data/naver.json'); // collector/naver-reviews.mjs가 만든 리뷰 수
+const PRICES = path.join(ROOT, 'data/prices.json'); // collector/prices.mjs가 만든 객실 요금
 const OUT_DIR = path.join(ROOT, 'web/public/data');
 const BASE = 'https://www.foresttrip.go.kr';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
@@ -123,6 +124,8 @@ async function main() {
   if (LIMIT_FORESTS) forests = forests.slice(0, LIMIT_FORESTS);
   let naver = {};
   try { naver = JSON.parse(await fs.readFile(NAVER, 'utf8')); } catch {}
+  let prices = {};
+  try { prices = JSON.parse(await fs.readFile(PRICES, 'utf8')); } catch {}
 
   const today = ymd(kstNow());
 
@@ -207,7 +210,7 @@ async function main() {
     booking: bookingStats((byForest.get(f.insttId) || []).map((g) => ({ kind: g.kind, s: g.s })), mask),
     goods: (byForest.get(f.insttId) || [])
       .sort((a, b) => a.kind.localeCompare(b.kind) || a.cls.localeCompare(b.cls, 'ko') || a.name.localeCompare(b.name, 'ko', { numeric: true }))
-      .map(({ forest, s, ...g }) => ({ ...g, s: s.join('') })),
+      .map(({ forest, s, ...g }) => ({ ...g, ...(prices[g.id] ? { pr: prices[g.id] } : {}), s: s.join('') })),
   }));
   const generatedAt = new Date().toISOString();
   const status = { generatedAt, start: today, days: nDays, forests: outForests };

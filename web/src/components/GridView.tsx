@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
-  addDaysISO, cellClass, diffISO, dow, DOW, goodsPasses, holidayName, isoOf, statusLabel, statusShort,
+  addDaysISO, cellClass, diffISO, dow, DOW, fmtWon, goodsPasses, holidayName, isoOf, kindName, statusLabel, statusShort, weekendPriceOf,
   type Filters, type ForestResult, type Goods, type Status,
 } from '../lib/data';
 
@@ -17,7 +17,7 @@ type Row =
   | { t: 'g'; r: ForestResult; g: Goods; hits: Set<number> };
 
 // 모바일에서는 이름 열을 좁혀 날짜 칸이 더 보이게 한다
-const NAME_W = typeof matchMedia !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 132 : 210;
+const NAME_W = typeof matchMedia !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 150 : 300;
 const CELL_W = 34;
 const ROW_H = 28;
 
@@ -61,12 +61,12 @@ export function GridView({ results, status, filters, onOpen }: Props) {
   const allCollapsed = rows.length > 0 && rows.every((r) => r.t === 'f');
 
   const exportCSV = () => {
-    const head = ['휴양림', '구분', '지역', '시설', '객실', '정원', ...cols.map((i) => addDaysISO(start, i))];
+    const head = ['휴양림', '구분', '지역', '시설', '객실', '정원', '주말요금', ...cols.map((i) => addDaysISO(start, i))];
     const lines = [head];
     for (const r of results) {
       const list = onlyHits ? r.goods.map((g) => g.goods) : r.forest.goods.filter((g) => goodsPasses(g, filters));
       for (const g of list) {
-        lines.push([r.forest.name, r.forest.type, `${r.forest.sidoName} ${r.forest.sigungu}`, g.cls, g.name, String(g.cap),
+        lines.push([r.forest.name, r.forest.type, `${r.forest.sidoName} ${r.forest.sigungu}`, g.cls, g.name, String(g.cap), String(g.pr?.[1] ?? ''),
           ...cols.map((i) => statusLabel(g.s[i] || '.'))]);
       }
     }
@@ -122,12 +122,22 @@ export function GridView({ results, status, filters, onOpen }: Props) {
                 const style = { position: 'absolute' as const, top: 0, left: 0, width, transform: `translateY(${vi.start}px)`, gridTemplateColumns: template };
                 if (row.t === 'f') {
                   const f = row.r.forest;
+                  // 숙소와 야영장은 요금 차이가 커서 시설별로 따로 평균 낸다
+                  const prices = (['01', '02'] as const)
+                    .filter((k) => !filters.kinds.length || filters.kinds.includes(k))
+                    .map((k) => [k, weekendPriceOf(f, [k])] as const)
+                    .filter(([, p]) => p != null);
                   return (
                     <div key={'f' + f.id} className="grow-f" style={style}>
                       <div className="gname forest" title={f.name}>
                         <button onClick={() => toggle(f.id)} aria-label="접기/펼치기">{collapsed.has(f.id) ? '▸' : '▾'}</button>
                         <button onClick={() => onOpen(f.id)}>{f.name}</button>
                         <span className="fsub">{row.n}</span>
+                        {prices.length > 0 && (
+                          <span className="gprice" title={`주말 1박 평균 요금(비수기 주말 기준) · ${prices.map(([k, p]) => `${kindName(k)} ${fmtWon(p!)}`).join(' · ')}`}>
+                            {prices.length === 1 ? `주말 ${fmtWon(prices[0][1]!)}` : prices.map(([k, p]) => `${k === '01' ? '숙소' : '야영'} ${fmtWon(p!).replace('원', '')}`).join(' · ')}
+                          </span>
+                        )}
                       </div>
                       {cols.map((i) => {
                         const n = row.r.hitDates.get(i);
@@ -139,7 +149,7 @@ export function GridView({ results, status, filters, onOpen }: Props) {
                 const g = row.g;
                 return (
                   <div key={g.id} className="grow-g" style={style}>
-                    <div className="gname" title={`${g.cls} ${g.name} ${g.cap}인 ${g.area}`}>
+                    <div className="gname" title={`${g.cls} ${g.name} ${g.cap}인 ${g.area}${g.pr ? ` · 주말 ${fmtWon(g.pr[1])}` : ''}`}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</span>
                       <span className="fsub">{g.cls}{g.cap ? ` ${g.cap}인` : ''}</span>
                     </div>

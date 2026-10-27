@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { maplibregl, MAP_STYLE } from '../lib/maplibre';
 import {
-  addDaysISO, cellClass, dow, DOW, FLAG_LABELS, goodsPasses, holidayName, isoOf, isOpen, isWeekendStay, kindName,
-  naverPlaceUrl, rateOf, RESERVE_URL, statusLabel, statusShort, type Filters, type Forest, type Status,
+  addDaysISO, cellClass, dow, DOW, FLAG_LABELS, fmtWon, goodsPasses, holidayName, isoOf, isOpen, isWeekendStay, kindName,
+  naverPlaceUrl, rateOf, RESERVE_URL, statusLabel, statusShort, weekendPriceOf, type Filters, type Forest, type Status,
 } from '../lib/data';
 import { Reviews } from './Reviews';
 import { RateBars } from './Rate';
@@ -59,8 +59,8 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
     return first;
   }, [f, lastIdx]);
   const cols = Array.from({ length: lastIdx - firstIdx + 1 }, (_, k) => firstIdx + k);
-  const template = `170px repeat(${cols.length}, 32px)`;
-  const width = 170 + cols.length * 32;
+  const template = `200px repeat(${cols.length}, 32px)`;
+  const width = 200 + cols.length * 32;
 
   const kinds = [...new Set(f.goods.map((g) => g.kind))].sort();
   const openCount = f.goods.reduce((n, g) => n + [...g.s].filter((c) => c === 'A').length, 0);
@@ -78,9 +78,15 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
           <div style={{ flex: 1 }}>
             <h2 id="drawer-title">{f.name} <span className={`badge t-${f.type}`}>{f.type}</span></h2>
             <Reviews forest={f} />
-            {kinds.map((k) => (
-              <div key={k} className="drawer-rate"><span className="fsub">{kindName(k)} 예약률</span><RateBars rate={rateOf(f, [k])} /></div>
-            ))}
+            {kinds.map((k) => {
+              const price = weekendPriceOf(f, [k]);
+              return (
+                <div key={k} className="drawer-rate">
+                  <span className="fsub">{kindName(k)} 예약률</span><RateBars rate={rateOf(f, [k])} />
+                  {price != null && <span className="gprice" title="요금표가 있는 객실의 주말 1박 평균(비수기 주말 기준)">주말 평균 {fmtWon(price)}</span>}
+                </div>
+              );
+            })}
             <div className="fsub">{f.addr || `${f.sidoName} · ${f.sigungu}`}</div>
             <div className="fsub">
               객실·사이트 {f.goods.length}개 · 예약가능 {openCount}건
@@ -120,9 +126,9 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
                     </div>
                     {list.map((g) => (
                       <div key={g.id} className="grow-g" style={{ gridTemplateColumns: template, width }}>
-                        <div className="gname" title={`${g.cls} ${g.name} · ${g.cap}인 · ${g.area} · ${g.flags.split('').map((c) => FLAG_LABELS[c]).join(', ')}`}>
+                        <div className="gname" title={`${g.cls} ${g.name} · ${g.cap}인 · ${g.area}${g.pr ? ` · 평일 ${fmtWon(g.pr[0])} · 주말 ${fmtWon(g.pr[1])} · 성수기 ${fmtWon(g.pr[3])}` : ''} · ${g.flags.split('').map((c) => FLAG_LABELS[c]).join(', ')}`}>
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</span>
-                          <span className="fsub">{g.cls} {g.cap ? `${g.cap}인` : ''}</span>
+                          <span className="fsub">{g.cls} {g.cap ? `${g.cap}인` : ''}{g.pr ? ` · 주말 ${fmtWon(g.pr[1])}` : ''}</span>
                         </div>
                         {cols.map((i) => {
                           const c = g.s[i] || '.';

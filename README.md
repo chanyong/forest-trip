@@ -12,7 +12,8 @@ GitHub Actions (3시간마다)
 로그인된 Aside 브라우저 (월 1회, 수동)
   └─ collector/refresh-master.sh ──▶ data/master.json (휴양림·객실 ID, 좌표)
 로컬 (월 1회, 수동)
-  └─ node collector/naver-reviews.mjs ──▶ data/naver.json (네이버 방문자·블로그 리뷰 수)
+  ├─ node collector/naver-reviews.mjs ──▶ data/naver.json (네이버 방문자·블로그 리뷰 수)
+  └─ node collector/prices.mjs ──▶ data/prices.json (객실별 비수기·성수기 평일·주말 1박 요금)
 ```
 
 - DB, 서버 없이 운영합니다. 데이터는 하나의 JSON(약 1MB, gzip 약 150KB)이고, 필터링은 브라우저에서 합니다.
@@ -24,6 +25,7 @@ GitHub Actions (3시간마다)
 | `collector/master.repl.js` / `master.poll.js` | Aside REPL로 시도별 객실 ID 수집 (로그인 세션) |
 | `collector/build-master.mjs` | 마스터 병합, 공식 좌표·주소·전화번호 보강 |
 | `collector/naver-reviews.mjs` | 네이버 모바일 검색의 플레이스 정보에서 리뷰 수·별점 수집. 기존 값은 건너뛰고 `--force`로 전체 갱신 |
+| `collector/prices.mjs` | 숲나들e 객실 상세(`selectFcltsArmpDtlView.do`, 비로그인)의 요금표 수집. 기존 값은 건너뛰고 `--force`로 전체 갱신. 웹은 비수기 주말 요금으로 휴양림별 주말 평균을 낸다 |
 | `data/master.json` | 휴양림 185곳 · 객실 7,464개 (2026-10-26 기준) |
 | `web/` | Vite + React + TS, MapLibre(OpenFreeMap), TanStack Virtual |
 | `.github/workflows/crawl.yml` | 정기 수집 → 커밋 → Vercel 배포 |

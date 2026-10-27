@@ -11,6 +11,7 @@ export interface Goods {
   area: string;
   flags: string; // a 에어컨, d 반려견, e 전기, w 온수, h 장애인, v 바우처
   maxNights: number | null;
+  pr?: [number, number, number, number]; // 1박 요금(원): 비수기 평일·주말, 성수기 평일·주말
   s: string; // 날짜당 1글자: A 가능, 1~9 대기, F 완료, C 휴무, R 공사, P 추첨·우선예약, . 정보 없음
 }
 
@@ -311,6 +312,19 @@ export const kindName = (k: string) => (k === '01' ? '숙소' : '야영장');
 
 export const cellClass = (c: string) =>
   c === 'A' ? 's-A' : c >= '1' && c <= '9' ? 's-W' : c === 'F' ? 's-F' : c === 'C' ? 's-C' : c === 'R' ? 's-R' : c === 'P' ? 's-P' : 's-0';
+
+// ---- 요금 ----
+// 주말 1박 평균 요금(비수기 주말 요금 기준). 고른 시설(숙소/야영장)에서 요금표가 있는 객실만 평균 낸다.
+export function weekendPriceOf(fo: Forest, kinds: Kind[]): number | null {
+  let sum = 0, n = 0;
+  for (const g of fo.goods) {
+    if (!g.pr?.[1] || (kinds.length && !kinds.includes(g.kind))) continue;
+    sum += g.pr[1];
+    n++;
+  }
+  return n ? Math.round(sum / n / 100) * 100 : null;
+}
+export const fmtWon = (n: number) => (n >= 10000 ? `${(n / 10000).toFixed(1).replace(/\.0$/, '')}만원` : `${n.toLocaleString()}원`);
 
 // ---- 네이버 리뷰 ----
 export const reviewTotal = (f: Forest) => (f.naver ? f.naver.v + f.naver.b : 0);
