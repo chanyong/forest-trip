@@ -477,3 +477,10 @@ footer .links { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
 }
 @media (min-width: 1800px) { .wrap { max-width: 1520px; } }
 @media (max-width: 640px) { .frow > .more-btn { flex: 1 1 auto; } .frow > .chip.ghost { flex: 0 0 auto; } }
+
+/* 레이아웃 밀림(CLS) 방지: 첫 요소 여백이 main 밖으로 빠져나가지 않게, 스크롤바 자리 확보 */
+html { scrollbar-gutter: stable; }
+main.wrap { padding-top: 20px; }
+.summary { margin-top: 0; }
+.skeleton { padding-top: 0; min-height: 100vh; align-content: start; }
+@media (max-width: 640px) { main.wrap { padding-top: 14px; } .summary { margin-top: 0; } }

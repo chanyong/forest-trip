@@ -13,6 +13,14 @@ import { GridView } from './components/GridView';
 const MapView = lazy(() => import('./components/MapView').then((m) => ({ default: m.MapView })));
 const ForestDrawer = lazy(() => import('./components/ForestDrawer').then((m) => ({ default: m.ForestDrawer })));
 
+// index.html에서 미리 시작한 요청을 처음 한 번만 쓰고, 다시 시도할 때는 새로 요청한다
+const takeStatusReq = (): Promise<Response> => {
+  const w = window as unknown as { __statusReq?: Promise<Response> };
+  const req = w.__statusReq;
+  w.__statusReq = undefined;
+  return req ? req.catch(() => fetch('/data/status.json')) : fetch('/data/status.json');
+};
+
 const VIEWS: { id: View; label: string }[] = [
   { id: 'table', label: '목록' },
   { id: 'map', label: '지도' },
@@ -36,7 +44,7 @@ export default function App() {
   const load = useCallback(() => {
     setError('');
     Promise.all([
-      fetch('/data/status.json').then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }),
+      takeStatusReq().then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }),
       fetch('/data/changes.json').then((r) => (r.ok ? r.json() : { items: [] })).catch(() => ({ items: [] })),
       fetch('/data/meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]).then(([s, c, m]: [Status, { items: Change[] }, Meta | null]) => {

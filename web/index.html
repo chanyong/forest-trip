@@ -25,12 +25,15 @@
     <meta name="twitter:title" content="숲빈자리 · 전국 자연휴양림 빈자리 찾기" />
     <meta name="twitter:description" content="전국 자연휴양림 숙소·야영장의 예약 가능 날짜를 한 번에." />
     <meta name="twitter:image" content="https://forest-trip-seven.vercel.app/og-image.png" />
+    <!-- 데이터는 JS 번들을 기다리지 않고 바로 받기 시작한다(앱이 이 요청을 그대로 쓴다) -->
+    <script>window.__statusReq = fetch('/data/status.json');</script>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-    <link rel="preload" href="/data/status.json" as="fetch" crossorigin />
+    <!-- 웹 글꼴은 화면 표시를 막지 않도록 비동기로 불러온다 -->
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" /></noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><p style="margin:0;padding:96px 16px;text-align:center;color:#646e68;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">숲빈자리 · 전국 휴양림 빈자리를 불러오는 중…</p></div>
     <noscript>숲빈자리는 JavaScript가 필요합니다. 브라우저 설정에서 JavaScript를 켜 주세요.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
