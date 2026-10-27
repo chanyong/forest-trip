@@ -11,7 +11,7 @@ interface Props {
   onOpen: (id: string) => void;
 }
 
-const PAGE = 60;
+const PAGE = 30; // 첫 화면 DOM을 가볍게(더 보기로 30곳씩 추가)
 
 export function DateChips({ idx, start, max = 10 }: { idx: number[]; start: string; max?: number }) {
   const shown = idx.slice(0, max);
