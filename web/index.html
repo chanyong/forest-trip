@@ -32,6 +32,19 @@
     <!-- 웹 글꼴은 화면 표시를 막지 않도록 비동기로 불러온다 -->
     <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" /></noscript>
+    <!-- Google Analytics(GA4): 실제 도메인에서만 수집한다(미리보기·로컬 제외) -->
+    <script>
+      if (location.hostname === 'supgaja.com') {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-7W5GR0VK33';
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        gtag('js', new Date());
+        gtag('config', 'G-7W5GR0VK33');
+      }
+    </script>
   </head>
   <body>
     <div id="root">
