@@ -58,9 +58,7 @@ export function Summary({ status, changes, onOpen }: Props) {
                 <button key={c.goods + c.date + c.at} className="change-card" onClick={() => onOpen(c.forest)}>
                   <div className="t">{g.forest}</div>
                   <div className="m">{g.cls} {g.goods}</div>
-                  <div><span className="d">{fmtDate(iso)}</span> <span className="m">{statusLabel(c.from)} → 예약가능</span></div>
-                  <div className="m">{new Date(c.at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 확인</div>
-                </button>
+                  <div><span className="d">{fmtDate(iso)}</span> <span className="m">{statusLabel(c.from)} → 예약가능</span></div>                </button>
               );
             })}
           </div>
