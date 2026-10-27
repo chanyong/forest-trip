@@ -17,9 +17,21 @@ interface Props {
 export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
   const start = isoOf(status.start);
   const mapBox = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const k = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      // 초점이 팝업 안에서만 돌도록 가둔다
+      if (e.key !== 'Tab' || !panel.current) return;
+      const items = [...panel.current.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), select, input, [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      const inside = panel.current.contains(document.activeElement);
+      if (e.shiftKey && (document.activeElement === first || !inside)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !inside)) { e.preventDefault(); first.focus(); }
+    };
     addEventListener('keydown', k);
     document.body.style.overflow = 'hidden';
     return () => { removeEventListener('keydown', k); document.body.style.overflow = ''; };
@@ -61,7 +73,7 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
 
   return (
     <div className="overlay" onClick={onClose}>
-      <aside className="drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <aside className="drawer" ref={panel} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
         <div className="drawer-hd">
           <div style={{ flex: 1 }}>
             <h2 id="drawer-title">{f.name} <span className={`badge t-${f.type}`}>{f.type}</span></h2>
@@ -80,7 +92,7 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
         </div>
         <div className="drawer-bd">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <a className="btn primary" href={RESERVE_URL} target="_blank" rel="noreferrer">숲나들e에서 예약하기 ↗</a>
+            <a className="btn primary" href={RESERVE_URL} target="_blank" rel="noreferrer">숲나들e에서 예약하기 <small>(로그인 필요)</small> ↗</a>
             {f.url && <a className="btn" href={f.url} target="_blank" rel="noreferrer">휴양림 홈페이지 ↗</a>}
             <a className="btn" href={naverPlaceUrl(f)} target="_blank" rel="noreferrer">네이버 리뷰·지도 ↗</a>
             <a className="btn" href={`https://map.kakao.com/?q=${encodeURIComponent(f.name)}`} target="_blank" rel="noreferrer">카카오맵</a>

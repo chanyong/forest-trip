@@ -62,7 +62,6 @@ export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin }: P
         </button>
         <span className="frow-sp" />
         <button className="chip" aria-pressed={hasOrigin} onClick={locate}><span aria-hidden>📍</span> 내 위치</button>
-        <button className="chip ghost" onClick={reset}><span aria-hidden>⟳</span> 초기화</button>
       </div>
       <div className="frow">
         <MultiSelect label="지역" options={SIDO_OPTS} value={f.sidos} onChange={(v) => set({ sidos: v })} allLabel="전국" />
@@ -81,6 +80,7 @@ export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin }: P
           <Select id="f-we" label="주말예약률" value={f.weRate} options={RATE_CONDS} onChange={(v) => set({ weRate: v })} />
           <Select id="f-wd" label="평일예약률" value={f.wdRate} options={RATE_CONDS} onChange={(v) => set({ wdRate: v })} />
         </div>
+        <button className="chip ghost" onClick={reset}><span aria-hidden>⟳</span> 초기화</button>
       </div>
     </section>
   );

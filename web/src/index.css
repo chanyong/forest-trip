@@ -416,3 +416,64 @@ button:disabled { cursor: default; opacity: 0.5; }
 .ftable td.c-rate .rate { flex-direction: column; align-items: flex-start; gap: 4px; }
 .drawer-rate { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
 @media (max-width: 760px) { .ftable td.c-rate .rate { flex-direction: row; } }
+
+/* ---- QC: 공통 ---- */
+body { word-break: keep-all; overflow-wrap: anywhere; }
+.skip { position: absolute; left: 12px; top: -60px; z-index: 100; background: var(--brand); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-weight: 700; text-decoration: none; }
+.skip:focus { top: 12px; }
+main:focus { outline: none; }
+label.dd-opt, .grid-tools label, summary, [role='tab'], .pin { cursor: pointer; }
+.empty p { margin: 0 0 6px; }
+.empty-actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+.loading p { margin: 0 0 8px; }
+.loading .btn { margin-top: 8px; }
+/* 로딩 스켈레톤 */
+.skeleton { padding: 20px 0; display: grid; gap: 12px; }
+.sk-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.sk { background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: sk 1.4s ease infinite; border-radius: var(--radius); }
+.sk-stat { height: 76px; }
+.sk-bar { height: 40px; }
+.sk-bar.short { width: 60%; }
+.sk-panel { height: 420px; }
+@keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@media (max-width: 760px) { .sk-row { grid-template-columns: repeat(2, 1fr); } }
+
+/* 노치·홈 인디케이터(Safe Area) */
+.top .wrap, main.wrap, footer { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+.top { padding-top: env(safe-area-inset-top); }
+footer { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+.drawer { padding-bottom: env(safe-area-inset-bottom); height: 100dvh; }
+.drawer-hd { padding-top: max(14px, env(safe-area-inset-top)); }
+@media (min-width: 641px) { .top .wrap, main.wrap { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); } }
+
+/* 터치 기기: 터치 영역 44px 이상 */
+@media (pointer: coarse) {
+  .chip, .dd-btn, .field, .btn, .expand, .icon-btn, .link-btn, .dd-foot button { min-height: 44px; }
+  .chip { height: 44px; }
+  .icon-btn { width: 44px; height: 44px; }
+  .rv { min-height: 44px; }
+  .grid-tools label { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+  .grid-tools input[type='checkbox'] { width: 20px; height: 20px; }
+  .dd-opt { min-height: 48px; }
+  .tabs button { min-height: 48px; }
+  .fname { min-height: 32px; }
+  footer a { display: inline-block; padding: 10px 0; }
+  .mapside .hd select, .mapside .hd .chip { min-height: 44px; height: 44px; }
+  .ftable th button { min-height: 44px; }
+}
+@media (pointer: coarse) {
+  .field input, .field select { height: 42px; }
+  .brand { min-height: 44px; }
+  .dl-card .fname, .mapside .item-main { min-height: 44px; }
+}
+footer .links { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+@media (pointer: coarse) {
+  .skip { min-height: 44px; display: inline-flex; align-items: center; }
+  .field input, .field select { height: 44px; }
+  .field { min-height: 46px; }
+  .ftable .fname { min-height: 44px; display: inline-flex; align-items: center; }
+  .maplibregl-ctrl-group button { width: 44px !important; height: 44px !important; }
+  footer a { padding: 12px 4px; min-height: 44px; display: inline-flex; align-items: center; }
+}
+@media (min-width: 1800px) { .wrap { max-width: 1520px; } }
+@media (max-width: 640px) { .frow > .more-btn { flex: 1 1 auto; } .frow > .chip.ghost { flex: 0 0 auto; } }

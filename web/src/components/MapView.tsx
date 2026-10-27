@@ -63,8 +63,8 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
       el.className = `pin ${level(r.total)}${sel === r.forest.id ? ' sel' : ''}`;
       el.textContent = r.total ? String(r.total > 999 ? '999+' : r.total) : '';
       el.title = `${r.forest.name} · ${r.total}건`;
-      el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', `${r.forest.name}, 빈자리 ${r.total}건`);
+      // 마커는 마우스·터치용. 키보드·화면 읽기 사용자는 같은 내용을 옆 목록에서 쓴다
+      el.setAttribute('aria-hidden', 'true');
       const first = r.total ? fmtDate(addDaysISO(start, r.first)) : '빈자리 없음';
       const popup = new maplibregl.Popup({ offset: 16, closeButton: false }).setHTML(
         `<b>${esc(r.forest.name)}</b> <small>${esc(r.forest.type)}</small><br/>` +
@@ -74,6 +74,7 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
         (r.rate.we != null ? `<br/><small>예약률 주말 ${r.rate.we}% · 평일 ${r.rate.wd ?? '-'}%</small>` : ''),
       );
       const mk = new maplibregl.Marker({ element: el }).setLngLat([r.forest.lng!, r.forest.lat!]).setPopup(popup).addTo(m);
+      el.tabIndex = -1; // 키보드 초점은 옆 목록으로만 받는다
       el.addEventListener('click', () => setSel(r.forest.id));
       markers.current.push(mk);
     }
@@ -121,12 +122,13 @@ export function MapView({ results, status, filters, origin, onOpen, locate }: Pr
           </div>
           {inView.map((r) => (
             <div key={r.forest.id} className={`item${sel === r.forest.id ? ' on' : ''}`}>
-              <button className="item-main" onClick={() => focus(r)} aria-label={`${r.forest.name} 지도에서 보기`}>
+              <button className="item-main" onClick={() => focus(r)}>
                 <b>{r.forest.name}</b> <span className={`badge t-${r.forest.type}`}>{r.forest.type}</span>
                 <span className="fsub" style={{ display: 'block' }}>
                   {r.forest.sigungu} · {r.total ? `${r.total}건 · ${fmtDate(addDaysISO(start, r.first))}부터` : '빈자리 없음'}
                   {r.dist != null ? ` · ${r.dist.toFixed(0)}km` : ''}
                 </span>
+                <span className="sr-only"> 지도에서 보기</span>
               </button>
               <div className="item-sub">
                 <RateBars rate={r.rate} />

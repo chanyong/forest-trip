@@ -14,19 +14,28 @@ interface Props<T extends string> {
 export function MultiSelect<T extends string>({ label, options, value, onChange, allLabel = '전체' }: Props<T>) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
   const id = useId();
+  const close = (focus = true) => { setOpen(false); if (focus) btn.current?.focus(); };
 
   useEffect(() => {
     if (!open) return;
-    const close = (e: MouseEvent | TouchEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', close);
-    document.addEventListener('touchstart', close);
+    const outside = (e: MouseEvent | TouchEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); btn.current?.focus(); } };
+    // 키보드로 목록 밖으로 나가면 닫는다
+    const blur = (e: FocusEvent) => { if (e.relatedTarget && !box.current?.contains(e.relatedTarget as Node)) setOpen(false); };
+    const el = box.current;
+    document.addEventListener('mousedown', outside);
+    document.addEventListener('touchstart', outside);
     document.addEventListener('keydown', esc);
+    el?.addEventListener('focusout', blur);
+    // 열리면 첫 항목으로 초점 이동
+    el?.querySelector<HTMLInputElement>('.dd-pop input')?.focus();
     return () => {
-      document.removeEventListener('mousedown', close);
-      document.removeEventListener('touchstart', close);
+      document.removeEventListener('mousedown', outside);
+      document.removeEventListener('touchstart', outside);
       document.removeEventListener('keydown', esc);
+      el?.removeEventListener('focusout', blur);
     };
   }, [open]);
 
@@ -36,7 +45,7 @@ export function MultiSelect<T extends string>({ label, options, value, onChange,
 
   return (
     <div className="dd" ref={box}>
-      <button type="button" className={`dd-btn${names.length ? ' on' : ''}`} aria-haspopup="true" aria-expanded={open} aria-controls={id}
+      <button type="button" ref={btn} className={`dd-btn${names.length ? ' on' : ''}`} aria-haspopup="true" aria-expanded={open} aria-controls={id}
         onClick={() => setOpen((o) => !o)}>
         <span className="dd-k">{label}</span>
         <span className="dd-v">{summary}</span>
@@ -52,7 +61,7 @@ export function MultiSelect<T extends string>({ label, options, value, onChange,
           ))}
           <div className="dd-foot">
             <button type="button" onClick={() => onChange([])} disabled={!value.length}>선택 해제</button>
-            <button type="button" className="ok" onClick={() => setOpen(false)}>확인</button>
+            <button type="button" className="ok" onClick={() => close()}>확인</button>
           </div>
         </div>
       )}

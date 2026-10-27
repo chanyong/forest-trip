@@ -69,10 +69,10 @@ export function CalendarView({ results, status, filters, onOpen }: Props) {
                     <button key={iso} className={cls} disabled={!inRange}
                       style={v ? { background: `color-mix(in srgb, var(--open) ${Math.round(alpha * 100)}%, var(--surface))` } : undefined}
                       onClick={() => setPicked(i)} aria-pressed={sel === i}
-                      aria-label={`${iso} 체크인 ${v ? `${v.forests}곳 ${v.goods}객실` : '빈자리 없음'}`}>
-                      <span className="dn">{k + 1}</span>
+>
+                      <span className="dn"><span className="sr-only">{mo}월 </span>{k + 1}<span className="sr-only">일 {DOW[wd]}요일 체크인</span></span>
                       {hol && <span className="hn">{hol}</span>}
-                      {inRange && <span className="cv">{v ? <>{v.forests}<small>곳</small></> : <small>-</small>}</span>}
+                      {inRange && <span className="cv">{v ? <>{v.forests}<small>곳</small><span className="sr-only"> 객실 {v.goods}개</span></> : <><small aria-hidden>-</small><span className="sr-only">빈자리 없음</span></>}</span>}
                     </button>
                   );
                 })}

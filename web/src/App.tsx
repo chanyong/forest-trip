@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   compute, defaultFilters, firstDataIdx, filtersFromURL, filtersToURL, isoOf,
   type Change, type Filters, type Meta, type Status, type View,
@@ -33,7 +33,8 @@ export default function App() {
     try { return localStorage.getItem('theme') || ''; } catch { return ''; }
   });
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setError('');
     Promise.all([
       fetch('/data/status.json').then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }),
       fetch('/data/changes.json').then((r) => (r.ok ? r.json() : { items: [] })).catch(() => ({ items: [] })),
@@ -44,9 +45,10 @@ export default function App() {
       setMeta(m);
       const b = defaultFilters(isoOf(s.start), s.days, firstDataIdx(s));
       setBase(b);
-      setFilters(filtersFromURL(b));
+      setFilters((f) => f ?? filtersFromURL(b));
     }).catch((e) => setError(`데이터를 불러오지 못했습니다 (${e.message})`));
   }, []);
+  useEffect(load, [load]);
 
   useEffect(() => {
     if (theme) document.documentElement.dataset.theme = theme;
@@ -56,12 +58,29 @@ export default function App() {
 
   useEffect(() => { if (filters && base) filtersToURL(filters, base); }, [filters, base]);
 
-  useEffect(() => {
+  const opener = useRef<HTMLElement | null>(null);
+  const pushed = useRef(false);
+  const urlWithForest = (id: string | null) => {
     const p = new URLSearchParams(location.search);
-    if (forestId) p.set('forest', forestId); else p.delete('forest');
+    if (id) p.set('forest', id); else p.delete('forest');
     const qs = p.toString();
-    history.replaceState(null, '', `${location.pathname}${qs ? '?' + qs : ''}`);
-  }, [forestId]);
+    return `${location.pathname}${qs ? '?' + qs : ''}`;
+  };
+  const openForest = useCallback((id: string) => {
+    opener.current = document.activeElement as HTMLElement | null;
+    setForestId(id);
+    history.pushState({ forest: id }, '', urlWithForest(id));
+    pushed.current = true;
+  }, []);
+  useEffect(() => {
+    const onPop = () => {
+      const id = new URLSearchParams(location.search).get('forest');
+      setForestId(id);
+      if (!id) { pushed.current = false; requestAnimationFrame(() => opener.current?.focus?.()); }
+    };
+    addEventListener('popstate', onPop);
+    return () => removeEventListener('popstate', onPop);
+  }, []);
 
   const results = useMemo(
     () => (status && filters ? compute(status, filters, origin) : []),
@@ -83,12 +102,29 @@ export default function App() {
     setTheme(dark ? 'light' : 'dark');
   };
 
-  const closeDrawer = useCallback(() => setForestId(null), []);
+  const closeDrawer = useCallback(() => {
+    if (pushed.current) { history.back(); return; } // popstate에서 닫힘
+    setForestId(null);
+    history.replaceState(null, '', urlWithForest(null));
+    requestAnimationFrame(() => opener.current?.focus?.());
+  }, []);
   const forest = status && forestId ? status.forests.find((f) => f.id === forestId) : null;
   const withHits = results.filter((r) => r.total > 0);
 
+  const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!filters) return;
+    const i = VIEWS.findIndex((v) => v.id === filters.view);
+    const n = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: VIEWS.length - 1 }[e.key];
+    if (n == null) return;
+    e.preventDefault();
+    const next = VIEWS[(n + VIEWS.length) % VIEWS.length].id;
+    set({ view: next });
+    requestAnimationFrame(() => document.getElementById(`tab-${next}`)?.focus());
+  };
+
   return (
     <>
+      <a className="skip" href="#main">본문 바로가기</a>
       <header className="top">
         <div className="wrap">
           <a className="brand" href="/">
@@ -109,12 +145,26 @@ export default function App() {
         </div>
       </header>
 
-      <main className="wrap">
-        {error && <div className="loading">{error}</div>}
-        {!status && !error && <div className="loading">전국 휴양림 데이터를 불러오는 중…</div>}
+      <main className="wrap" id="main" tabIndex={-1}>
+        {error && (
+          <div className="loading" role="alert">
+            <p>{error}</p>
+            <p className="fsub">네트워크 상태를 확인한 뒤 다시 시도해 주세요.</p>
+            <button className="btn primary" onClick={load}>다시 시도</button>
+          </div>
+        )}
+        {!status && !error && (
+          <div className="skeleton" aria-busy="true" aria-label="전국 휴양림 데이터를 불러오는 중">
+            <div className="sk-row">{[0, 1, 2, 3].map((i) => <div key={i} className="sk sk-stat" />)}</div>
+            <div className="sk sk-bar" />
+            <div className="sk sk-bar short" />
+            <div className="sk sk-panel" />
+            <p className="fsub" style={{ textAlign: 'center' }}>전국 휴양림 데이터를 불러오는 중…</p>
+          </div>
+        )}
         {status && filters && base && (
           <>
-            <Summary status={status} changes={changes} meta={meta} onOpen={setForestId} />
+            <Summary status={status} changes={changes} meta={meta} onOpen={openForest} />
             <FilterBar
               filters={filters}
               base={base}
@@ -123,9 +173,10 @@ export default function App() {
               locate={locate}
               hasOrigin={!!origin}
             />
-            <div className="tabs" role="tablist">
+            <div className="tabs" role="tablist" aria-label="보기 방식" onKeyDown={onTabKey}>
               {VIEWS.map((v) => (
-                <button key={v.id} role="tab" id={`tab-${v.id}`} aria-selected={filters.view === v.id} onClick={() => set({ view: v.id })}>
+                <button key={v.id} role="tab" id={`tab-${v.id}`} aria-selected={filters.view === v.id} aria-controls="view-panel"
+                  tabIndex={filters.view === v.id ? 0 : -1} onClick={() => set({ view: v.id })}>
                   {v.label}
                 </button>
               ))}
@@ -136,14 +187,27 @@ export default function App() {
             <p className="mobile-count" aria-live="polite">
               조건에 맞는 휴양림 <b>{withHits.length}</b>곳 · 객실·날짜 <b>{withHits.reduce((n, r) => n + r.total, 0).toLocaleString()}</b>건
             </p>
-            {filters.view === 'table' && <TableView results={results} status={status} filters={filters} set={set} onOpen={setForestId} />}
+            <div role="tabpanel" id="view-panel" aria-labelledby={`tab-${filters.view}`}>
+            {withHits.length === 0 ? (
+              <div className="panel empty">
+                <p><b>조건에 맞는 빈자리가 없습니다.</b></p>
+                <p className="fsub">기간을 넓히거나, 지역·상세 조건을 줄이거나, '대기 포함'을 켜 보세요.</p>
+                <div className="empty-actions">
+                  {!filters.wait && <button className="btn" onClick={() => set({ wait: true })}>대기 포함하기</button>}
+                  <button className="btn primary" onClick={() => setFilters({ ...base, view: filters.view })}>조건 초기화</button>
+                </div>
+              </div>
+            ) : <>
+            {filters.view === 'table' && <TableView results={results} status={status} filters={filters} set={set} onOpen={openForest} />}
             {filters.view === 'map' && (
               <Suspense fallback={<div className="panel loading">지도를 불러오는 중…</div>}>
-                <MapView results={results} status={status} filters={filters} origin={origin} onOpen={setForestId} locate={locate} />
+                <MapView results={results} status={status} filters={filters} origin={origin} onOpen={openForest} locate={locate} />
               </Suspense>
             )}
-            {filters.view === 'calendar' && <CalendarView results={results} status={status} filters={filters} onOpen={setForestId} />}
-            {filters.view === 'grid' && <GridView results={results} status={status} filters={filters} onOpen={setForestId} />}
+            {filters.view === 'calendar' && <CalendarView results={results} status={status} filters={filters} onOpen={openForest} />}
+            {filters.view === 'grid' && <GridView results={results} status={status} filters={filters} onOpen={openForest} />}
+            </>}
+            </div>
           </>
         )}
         <footer>
@@ -156,6 +220,15 @@ export default function App() {
             <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>에서 진행하세요.
             공휴일은 주말 판단에만 쓰이며 연 1회 갱신합니다.
           </p>
+          <p>
+            <b>개인정보 처리 안내</b> · 회원가입·로그인이 없고 개인정보를 수집하거나 서버로 보내지 않습니다.
+            화면 테마(라이트/다크) 설정만 이 브라우저에 저장되며, '내 위치'는 브라우저 안에서 거리 계산에만 쓰입니다.
+          </p>
+          <nav className="links" aria-label="바깥 링크">
+            <a href="https://github.com/chanyong/forest-trip/issues" target="_blank" rel="noreferrer">문의·수집 중단 요청</a>
+            <a href="https://github.com/chanyong/forest-trip" target="_blank" rel="noreferrer">소스 코드</a>
+            <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>
+          </nav>
         </footer>
       </main>
 
