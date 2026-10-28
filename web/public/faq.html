@@ -25,17 +25,17 @@
 <style>
   :root {
     --bg: #f6f5f0; --surface: #ffffff; --surface-2: #f0efe8; --line: #e2e0d6;
-    --ink: #1d2420; --ink-2: #4b5650; --ink-3: #646e68; --brand: #1f5f3f; --brand-soft: #e3efe6;
+    --ink: #1d2420; --ink-2: #4b5650; --ink-3: #646e68; --brand: #1f5f3f; --brand-soft: #e3efe6; --line-strong: #cfccbf;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
       --bg: #121614; --surface: #1a201c; --surface-2: #222a25; --line: #2f3933;
-      --ink: #e7ece8; --ink-2: #b4bfb8; --ink-3: #939f98; --brand: #7cc79c; --brand-soft: #1f3328;
+      --ink: #e7ece8; --ink-2: #b4bfb8; --ink-3: #939f98; --brand: #7cc79c; --brand-soft: #1f3328; --line-strong: #46534b;
     }
   }
   :root[data-theme='dark'] {
     --bg: #121614; --surface: #1a201c; --surface-2: #222a25; --line: #2f3933;
-    --ink: #e7ece8; --ink-2: #b4bfb8; --ink-3: #939f98; --brand: #7cc79c; --brand-soft: #1f3328;
+    --ink: #e7ece8; --ink-2: #b4bfb8; --ink-3: #939f98; --brand: #7cc79c; --brand-soft: #1f3328; --line-strong: #46534b;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6;
@@ -55,8 +55,10 @@
   .toc a:hover { border-color: var(--brand); color: var(--brand); }
   .cat { margin-top: 30px; scroll-margin-top: 16px; }
   .cat h2 { margin: 0 0 10px 2px; font-size: 1.1rem; }
-  .list { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  .item + .item { border-top: 1px solid var(--line); }
+  .list { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(20,30,25,.06), 0 6px 20px rgba(20,30,25,.08); }
+  .item[open] { background: var(--brand-soft); }
+  .item[open] > summary { box-shadow: inset 4px 0 0 var(--brand); }
+  .item + .item { border-top: 1px solid var(--line-strong); }
   .item > summary { list-style: none; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; padding: 14px 18px; font-weight: 600; font-size: 0.95rem; word-break: keep-all; }
   .item > summary::-webkit-details-marker { display: none; }
   .item > summary::before { content: "Q"; color: var(--brand); font-weight: 800; }

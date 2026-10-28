@@ -179,7 +179,7 @@ export default function App() {
               </span>
             );
           })()}
-          <a className="icon-btn faq-link" href="/faq.html" aria-label="자주 묻는 질문" title="자주 묻는 질문"><span aria-hidden>?</span></a>
+          <a className="faq-link" href="/faq.html" title="자주 묻는 질문"><span aria-hidden>?</span><span className="faq-l">자주 묻는 질문</span><span className="faq-s">FAQ</span></a>
           <button className="icon-btn" onClick={toggleTheme} aria-label="라이트/다크 모드 전환"><span aria-hidden>◐</span></button>
         </div>
       </header>
