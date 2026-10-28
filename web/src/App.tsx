@@ -179,6 +179,7 @@ export default function App() {
               </span>
             );
           })()}
+          <a className="icon-btn faq-link" href="/faq.html" aria-label="자주 묻는 질문" title="자주 묻는 질문"><span aria-hidden>?</span></a>
           <button className="icon-btn" onClick={toggleTheme} aria-label="라이트/다크 모드 전환"><span aria-hidden>◐</span></button>
         </div>
       </header>
@@ -268,6 +269,7 @@ export default function App() {
             브라우저 설정에서 쿠키를 차단하면 수집되지 않습니다.
           </p>
           <nav className="links" aria-label="바깥 링크">
+            <a href="/faq.html">자주 묻는 질문</a>
             <a href="https://github.com/chanyong/forest-trip/issues" target="_blank" rel="noreferrer">문의·수집 중단 요청</a>
             <a href="https://github.com/chanyong/forest-trip" target="_blank" rel="noreferrer">소스 코드</a>
             <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>
