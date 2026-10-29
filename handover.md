@@ -118,7 +118,8 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | 10-28 | (이번 커밋) | 자주 묻는 질문 `web/public/faq.html`(정적, 6개 분류 24문항, 문의는 GitHub Issues), 머리글 `?` 아이콘(`.faq-link`)·바닥글 링크·sitemap 추가 |
 | 10-28 | (이번 커밋) | FAQ 버튼을 초록 '자주 묻는 질문' 글자 버튼으로(모바일 'FAQ'), FAQ 목록 테두리·그림자·펼친 질문 강조 |
 
-| 10-30 | (이번 커밋) | 빈자리 이메일 알림 피드 `/alerts-feed.json`·알림 버튼(공통 모듈 계약 v1), 새로 빈 자리 NEW 표시·'최근 24시간 새로 빈 순' 정렬, 내 휴양림(즐겨찾기), 휴양림별·지역/시기 정적 SEO 페이지와 sitemap, 예약 오픈 안내(수집기에 policy 추가), www 301·/faq 연결, 개인정보처리방침·이용약관, 갱신·출처 배지, 운영자의 다른 서비스 링크, Organization·FAQPage JSON-LD |
+| 10-30 | 7dbdeea | 빈자리 이메일 알림 피드 `/alerts-feed.json`·알림 버튼(공통 모듈 계약 v1), 새로 빈 자리 NEW 표시·'최근 24시간 새로 빈 순' 정렬, 내 휴양림(즐겨찾기), 휴양림별·지역/시기 정적 SEO 페이지와 sitemap, 예약 오픈 안내(수집기에 policy 추가), www 301·/faq 연결, 개인정보처리방침·이용약관, 갱신·출처 배지, 운영자의 다른 서비스 링크, Organization·FAQPage JSON-LD |
+| 10-30 | (배포 확인) | 운영 확인: `/alerts-feed.json` 200(6,362건), `/forest/0101`·`/vacancy/...`·`/privacy`·`/terms` 200, www·vercel.app → 301, `/faq` → `/faq.html` 301, sitemap 222개 URL. QC quick 신규 문제 없음(다크 모드 탭 color-contrast 8건은 기존부터 있던 것). 예약 오픈 안내는 다음 수집(policy 포함) 뒤부터 보인다 |
 
 ### 가격순 정렬 규칙 (사용자와 합의)
 - 숙소와 야영장 요금을 섞어 비교하지 않는다.
