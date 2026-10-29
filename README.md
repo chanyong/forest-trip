@@ -28,6 +28,7 @@ GitHub Actions (3시간마다)
 | `collector/prices.mjs` | 숲나들e 객실 상세(`selectFcltsArmpDtlView.do`, 비로그인)의 요금표 수집. 기존 값은 건너뛰고 `--force`로 전체 갱신. 웹은 비수기 주말 요금으로 휴양림별 주말 평균을 낸다 |
 | `data/master.json` | 휴양림 185곳 · 객실 7,464개 (2026-10-26 기준) |
 | `web/` | Vite + React + TS, MapLibre(OpenFreeMap), TanStack Virtual |
+| `web/scripts/build-static.mjs` | 빌드 마지막 단계. status.json 으로 빈자리 알림 피드(`/alerts-feed.json`), 휴양림별 페이지(`/forest/<id>`), 지역·시기 랜딩(`/vacancy/...`), sitemap 생성 |
 | `.github/workflows/crawl.yml` | 정기 수집 → 커밋 → Vercel 배포 |
 
 ## 상태 코드 (`status.json`의 `s` 문자열, 날짜당 1글자)

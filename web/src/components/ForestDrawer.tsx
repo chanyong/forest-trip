@@ -4,6 +4,7 @@ import {
   addDaysISO, cellClass, dow, DOW, FLAG_LABELS, fmtWon, goodsPasses, holidayName, isoOf, isOpen, isWeekendStay, kindName,
   naverPlaceUrl, rateOf, RESERVE_URL, statusLabel, statusShort, weekendPriceOf, type Filters, type Forest, type Status,
 } from '../lib/data';
+import { policyInfo } from '../lib/policy.mjs';
 import { Reviews } from './Reviews';
 import { RateBars } from './Rate';
 
@@ -12,9 +13,15 @@ interface Props {
   status: Status;
   filters: Filters;
   onClose: () => void;
+  fav: boolean;
+  toggleFav: () => void;
+  onAlert: () => void;
 }
 
-export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
+const fmtMD = (iso: string) => `${+iso.slice(5, 7)}/${+iso.slice(8, 10)}(${DOW[dow(iso)]})`;
+
+export function ForestDrawer({ forest: f, status, filters, onClose, fav, toggleFav, onAlert }: Props) {
+  const policy = useMemo(() => policyInfo(f.policy, status.generatedAt), [f, status.generatedAt]);
   const start = isoOf(status.start);
   const mapBox = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLElement>(null);
@@ -94,6 +101,7 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
               {f.tel ? <> · <a href={`tel:${f.tel}`}>{f.tel}</a></> : null}
             </div>
           </div>
+          <button className="icon-btn fav-lg" onClick={toggleFav} aria-pressed={fav} aria-label={fav ? '내 휴양림에서 빼기' : '내 휴양림에 추가'} title={fav ? '내 휴양림에서 빼기' : '내 휴양림에 추가(이 브라우저에 저장)'}><span aria-hidden>{fav ? '★' : '☆'}</span></button>
           <button className="icon-btn" onClick={onClose} aria-label="닫기" autoFocus>✕</button>
         </div>
         <div className="drawer-bd">
@@ -102,7 +110,16 @@ export function ForestDrawer({ forest: f, status, filters, onClose }: Props) {
             {f.url && <a className="btn" href={f.url} target="_blank" rel="noreferrer">휴양림 홈페이지 ↗</a>}
             <a className="btn" href={naverPlaceUrl(f)} target="_blank" rel="noreferrer">네이버 리뷰·지도 ↗</a>
             <a className="btn" href={`https://map.kakao.com/?q=${encodeURIComponent(f.name)}`} target="_blank" rel="noreferrer">카카오맵</a>
+            <button className="btn alert" onClick={onAlert}><span aria-hidden>🔔</span> 이 휴양림 빈자리 알림</button>
+            <a className="btn" href={`/forest/${encodeURIComponent(f.id)}`}>휴양림 페이지</a>
           </div>
+          {policy && (
+            <div className="policy">
+              <b>예약 오픈</b> {policy.lastDay && <>지금은 {fmtMD(policy.lastDay)} 체크인까지 예약을 받습니다. </>}
+              {policy.rule}{policy.next && <> <b>{policy.next}</b>.</>}
+              <span className="fsub"> 숲나들e 예약정책 기준 · 추첨·우선예약 기간은 숲나들e 공지 확인</span>
+            </div>
+          )}
           {f.lat != null && <div className="minimap" ref={mapBox} />}
           {kinds.map((k) => {
             const list = f.goods.filter((g) => g.kind === k);

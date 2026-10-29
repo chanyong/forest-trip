@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addDaysISO, fmtDate, holidayName, isoOf, isRestDay, kindName, SORTS, type Filters, type ForestResult, type Status } from '../lib/data';
+import { addDaysISO, fmtDate, holidayName, isoOf, isRestDay, kindName, RECENT_HOURS, SORTS, type Filters, type ForestResult, type Fresh, type Status } from '../lib/data';
 import { Reviews } from './Reviews';
 import { RateBars } from './Rate';
 import { Price } from './Price';
@@ -10,11 +10,14 @@ interface Props {
   filters: Filters;
   set: (p: Partial<Filters>) => void;
   onOpen: (id: string) => void;
+  favs: Set<string>;
+  toggleFav: (id: string) => void;
+  fresh: { fresh: Fresh; latestAt: number } | null;
 }
 
 const PAGE = 30; // 첫 화면 DOM을 가볍게(더 보기로 30곳씩 추가)
 
-export function DateChips({ idx, start, max = 10 }: { idx: number[]; start: string; max?: number }) {
+export function DateChips({ idx, start, max = 10, isNew }: { idx: number[]; start: string; max?: number; isNew?: (i: number) => boolean }) {
   const shown = idx.slice(0, max);
   return (
     <div className="dchips">
@@ -22,8 +25,8 @@ export function DateChips({ idx, start, max = 10 }: { idx: number[]; start: stri
         const iso = addDaysISO(start, i);
         const rest = isRestDay(addDaysISO(iso, 1));
         return (
-          <span key={i} className={`dchip${rest ? ' rest' : ''}`} title={holidayName(iso) || undefined}>
-            {fmtDate(iso)}
+          <span key={i} className={`dchip${rest ? ' rest' : ''}${isNew?.(i) ? ' new' : ''}`} title={[holidayName(iso), isNew?.(i) ? '직전 수집 대비 새로 빈 자리' : ''].filter(Boolean).join(' · ') || undefined}>
+            {fmtDate(iso)}{isNew?.(i) && <span className="sr-only"> (새로 빈 자리)</span>}
           </span>
         );
       })}
@@ -32,7 +35,9 @@ export function DateChips({ idx, start, max = 10 }: { idx: number[]; start: stri
   );
 }
 
-export function TableView({ results, status, filters, set, onOpen }: Props) {
+export function TableView({ results, status, filters, set, onOpen, favs, toggleFav, fresh }: Props) {
+  // 직전 수집 대비 새로 빈 자리(이번 수집에서 처음 예약가능으로 바뀐 객실·날짜)
+  const newAt = (goodsId: string, i: number) => !!fresh && fresh.fresh.get(goodsId)?.get(i) === fresh.latestAt;
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [limit, setLimit] = useState(PAGE);
   const [showEmpty, setShowEmpty] = useState(false);
@@ -83,11 +88,18 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
             const dates = [...r.hitDates.keys()].sort((a, b) => a - b);
             const isOpen = open.has(f.id);
             const kinds = [...new Set(r.goods.map((g) => kindName(g.goods.kind)))];
+            const newDates = new Set(r.goods.flatMap((g) => g.hits.filter((i) => newAt(g.goods.id, i))));
+            const fav = favs.has(f.id);
             return (
               <tr key={f.id} className={r.total ? '' : 'dim'}>
                 <td style={{ minWidth: 200 }}>
+                  <button className="fav" aria-pressed={fav} aria-label={`${f.name} 내 휴양림${fav ? '에서 빼기' : '에 추가'}`} title={fav ? '내 휴양림에서 빼기' : '내 휴양림에 추가(이 브라우저에 저장)'} onClick={() => toggleFav(f.id)}>
+                    <span aria-hidden>{fav ? '★' : '☆'}</span>
+                  </button>
                   <button className="fname" onClick={() => onOpen(f.id)}>{f.name}</button>{' '}
                   <span className={`badge t-${f.type}`}>{f.type}</span>
+                  {r.newNow > 0 && <span className="badge new" title="직전 수집 대비 새로 예약가능으로 바뀐 객실·날짜 수">NEW {r.newNow}</span>}
+                  {r.fresh > r.newNow && <span className="badge fresh" title={`최근 ${RECENT_HOURS}시간 안에 취소 등으로 새로 빈 객실·날짜 수(지금도 비어 있음)`}>{RECENT_HOURS}h 새로 빈 {r.fresh}</span>}
                   <div className="fsub">{f.sidoName} · {f.sigungu}{kinds.length ? ` · ${kinds.join('/')}` : ''}</div>
                   <Reviews forest={f} />
                 </td>
@@ -103,7 +115,7 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
                 </td>
                 <td className="c-rate"><RateBars rate={r.rate} /></td>
                 <td style={{ width: '46%' }}>
-                  {r.total > 0 && <DateChips idx={dates} start={start} />}
+                  {r.total > 0 && <DateChips idx={dates} start={start} isNew={(i) => newDates.has(i)} />}
                   {isOpen && (
                     <div className="gsub">
                       {r.goods.map((g) => (
@@ -112,7 +124,7 @@ export function TableView({ results, status, filters, set, onOpen }: Props) {
                             <b>{g.goods.name}</b> {g.goods.cls}
                             <div className="fsub">{g.goods.cap ? `${g.goods.cap}인` : ''}{g.goods.area ? ` · ${g.goods.area}` : ''}</div>
                           </div>
-                          <DateChips idx={g.hits} start={start} max={14} />
+                          <DateChips idx={g.hits} start={start} max={14} isNew={(i) => newAt(g.goods.id, i)} />
                         </div>
                       ))}
                     </div>

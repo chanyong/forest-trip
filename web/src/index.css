@@ -529,3 +529,30 @@ main.wrap { padding-top: 20px; }
 .summary { margin-top: 0; }
 .skeleton { padding-top: 0; min-height: 100vh; align-content: start; }
 @media (max-width: 640px) { main.wrap { padding-top: 14px; } .summary { margin-top: 0; } }
+
+/* ---- 빈자리 알림·내 휴양림·새로 빈 자리 (2026-10-29) ---- */
+.basis { margin: 4px 0 10px; font-size: 12px; color: var(--ink-3); }
+.alert-btn { display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #b4530a; background: var(--surface); color: #a14a09; font-weight: 700; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.alert-btn:hover { background: #fdf0e3; }
+:root[data-theme='dark'] .alert-btn { border-color: #f2a65a; color: #f2a65a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .alert-btn { border-color: #f2a65a; color: #f2a65a; } :root:not([data-theme='light']) .alert-btn:hover { background: #3a2a1a; } }
+:root[data-theme='dark'] .alert-btn:hover { background: #3a2a1a; }
+.alert-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: -4px 0 10px; font-size: 13px; color: var(--ink-3); }
+@media (max-width: 640px) { .alert-bar { justify-content: space-between; } .alert-bar span { font-size: 12px; } .alert-btn { min-height: 44px; } }
+.btn.alert { border-color: #b4530a; color: #a14a09; }
+.hint { font-size: 13px; color: var(--ink-2); background: var(--surface-2); border-radius: 10px; padding: 8px 12px; margin: 8px 0; }
+.fav { border: 0; background: none; padding: 0 4px 0 0; font-size: 18px; line-height: 1; color: #c9a227; cursor: pointer; min-width: 28px; min-height: 28px; vertical-align: -2px; }
+.fav[aria-pressed='false'] { color: var(--ink-3); }
+.fav-lg span { color: #c9a227; font-size: 20px; }
+.fav-lg[aria-pressed='false'] span { color: var(--ink-3); }
+.badge.new { background: #fdf0e3; color: #a14a09; margin-left: 4px; }
+.badge.fresh { background: var(--surface-2); color: var(--ink-2); margin-left: 4px; }
+:root[data-theme='dark'] .badge.new { background: #3a2a1a; color: #f2a65a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .badge.new { background: #3a2a1a; color: #f2a65a; } }
+.dchip.new { box-shadow: inset 0 0 0 2px #e08a3c; font-weight: 700; }
+.policy { margin-top: 10px; font-size: 13px; color: var(--ink-2); background: var(--surface-2); border-left: 3px solid var(--brand); border-radius: 8px; padding: 8px 12px; }
+.toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 200; max-width: min(92vw, 440px); background: #1d2420; color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); cursor: pointer; }
+footer .others { margin-top: 10px; }
+footer .others > b { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 2px; }
+footer .others small { color: var(--ink-3); font-size: 11px; }
+@media (pointer: coarse) { .fav { min-width: 44px; min-height: 44px; margin: -8px 0 -8px -8px; padding: 0; } .alert-btn { min-height: 44px; } }

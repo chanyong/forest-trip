@@ -139,7 +139,13 @@ async function main() {
       let last = sth.rsrvtPolcy?.monthLastDay || null;
       if (sth.gnrlRsrvtTrnseDtm && (!last || sth.gnrlRsrvtTrnseDtm > last)) last = sth.gnrlRsrvtTrnseDtm;
       f.lastDay = last;
-    } catch { f.lastDay = null; }
+      // 예약 오픈 규칙(숲나들e 예약정책 원문 값): WEEK=매주 rsrvtBgDt(1=일…7=토)요일, MON=매월 rsrvtBgDt일, rsrvtBgnTm 시각
+      const p = sth.rsrvtPolcy || {};
+      f.policy = p.rsrvtCycleTpeCd ? {
+        cycle: p.rsrvtCycleTpeCd, day: p.rsrvtBgDt ?? null, time: String(p.rsrvtBgnTm || '').trim() || null,
+        weeks: p.dytmCycleEstbsVal ? Number(p.dytmCycleEstbsVal) : null, lastDay: last,
+      } : (last ? { lastDay: last } : null);
+    } catch { f.lastDay = null; f.policy = null; }
     await sleep(jitter());
   });
   // 수집 범위: 오늘 ~ 가장 먼 예약 가능일 (최대 120일)
@@ -206,6 +212,7 @@ async function main() {
   const outForests = forests.map((f) => ({
     id: f.insttId, name: f.shortName, type: f.type, sido: f.sido, sidoName: f.sidoName,
     sigungu: f.sigungu, lat: f.lat, lng: f.lng, addr: f.addr, tel: f.tel, url: f.url, checkin: f.checkin, checkout: f.checkout,
+    policy: f.policy || null,
     naver: naver[f.insttId] ? { id: naver[f.insttId].id, v: naver[f.insttId].v, b: naver[f.insttId].b, s: naver[f.insttId].s } : null,
     booking: bookingStats((byForest.get(f.insttId) || []).map((g) => ({ kind: g.kind, s: g.s })), mask),
     goods: (byForest.get(f.insttId) || [])

@@ -9,6 +9,7 @@ interface Props {
   reset: () => void;
   locate: () => void;
   hasOrigin: boolean;
+  favCount: number;
 }
 
 const TYPES = ['국립', '공립', '사립'].map((t) => ({ value: t, label: t }));
@@ -18,7 +19,7 @@ const SIDO_OPTS = SIDOS.map((s) => ({ value: s.code, label: s.name }));
 const PEOPLE = [0, 2, 3, 4, 5, 6, 8, 10, 12].map((n) => ({ value: n, label: n ? `${n}인 이상` : '제한 없음' }));
 const NIGHTS = [1, 2, 3].map((n) => ({ value: n, label: `${n}박` }));
 
-export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin }: Props) {
+export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin, favCount }: Props) {
   const [more, setMore] = useState(false);
   const min = base.from;
   const max = base.to;
@@ -59,6 +60,10 @@ export function FilterBar({ filters: f, base, set, reset, locate, hasOrigin }: P
         </button>
         <button className="chip" aria-pressed={f.wait} onClick={() => set({ wait: !f.wait })} title="대기 신청 가능한 날짜 포함">
           대기 포함
+        </button>
+        <button className="chip" aria-pressed={f.mine} onClick={() => set({ mine: !f.mine })}
+          title="☆로 저장한 휴양림만 보기(이 브라우저에 저장)">
+          <span aria-hidden>{f.mine ? '★' : '☆'}</span> 내 휴양림{favCount ? ` ${favCount}` : ''}
         </button>
         <span className="frow-sp" />
         <button className="chip" aria-pressed={hasOrigin} onClick={locate}><span aria-hidden>📍</span> 내 위치</button>

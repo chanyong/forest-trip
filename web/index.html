@@ -26,6 +26,7 @@
     <meta name="twitter:description" content="전국 자연휴양림 숙소·야영장 예약 빈자리를 한 번에." />
     <meta name="twitter:image" content="https://supgaja.com/og-image.png" />
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"숲가자","alternateName":"전국 자연휴양림 예약 빈자리 찾기","url":"https://supgaja.com/","inLanguage":"ko"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"숲가자","url":"https://supgaja.com/","logo":"https://supgaja.com/icon-512.png","email":"cyjung@gmail.com","founder":{"@type":"Person","name":"chanyong"}}</script>
     <!-- 데이터는 JS 번들을 기다리지 않고 바로 받기 시작한다(앱이 이 요청을 그대로 쓴다) -->
     <script>window.__statusReq = fetch('/data/status.json');</script>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
@@ -59,5 +60,6 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- 운영자 사이트 공통 '의견·질문' 버튼 (딸깍랭크 의견함) -->
     <script src="https://ddalkkakrank.kr/feedback.js" defer data-color="#0b6e4f"></script>
+    <!-- 운영자 사이트 공통 '빈자리 이메일 알림' 모듈(https://ddalkkakrank.kr/alerts.js)은 알림 버튼을 처음 누를 때 불러온다(src/lib/alerts.ts) -->
   </body>
 </html>

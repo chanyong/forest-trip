@@ -1,8 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import {
-  compute, defaultFilters, firstDataIdx, filtersFromURL, filtersToURL, isoOf,
-  type Change, type Filters, type Meta, type Status, type View,
+  compute, defaultFilters, firstDataIdx, filtersFromURL, filtersToURL, freshIndex, isoOf,
+  type Change, type Filters, type Forest, type Meta, type Status, type View,
 } from './lib/data';
+import { alertFromFilters, openAlerts } from './lib/alerts';
+import { useFavs } from './lib/favs';
 import { FilterBar } from './components/FilterBar';
 import { Summary } from './components/Summary';
 import { TableView } from './components/TableView';
@@ -114,10 +116,26 @@ export default function App() {
     return () => removeEventListener('popstate', onPop);
   }, []);
 
+  const { favs, toggle: toggleFav } = useFavs();
+  const fresh = useMemo(() => (status ? freshIndex(status, changes) : null), [status, changes]);
   const results = useMemo(
-    () => (status && filters ? compute(status, filters, origin) : []),
-    [status, filters, origin],
+    () => (status && filters ? compute(status, filters, origin, { favs, fresh: fresh?.fresh, latestAt: fresh?.latestAt }) : []),
+    [status, filters, origin, favs, fresh],
   );
+
+  // 빈자리 이메일 알림: 지금 조건으로 공통 알림 창을 연다. 알림 모듈이 아직 없으면 안내만 보여 준다
+  const [notice, setNotice] = useState('');
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(''), 6000);
+    return () => clearTimeout(t);
+  }, [notice]);
+  const askAlert = useCallback((fo?: Forest | null) => {
+    if (!status || !filters) return;
+    const req = alertFromFilters(status, filters, favs, fo);
+    if ('error' in req) { setNotice(req.error); return; }
+    openAlerts(req).then((ok) => { if (!ok) setNotice('빈자리 이메일 알림은 곧 제공됩니다. 준비되면 이 버튼으로 바로 신청할 수 있어요.'); });
+  }, [status, filters, favs]);
 
   const set = (patch: Partial<Filters>) => setFilters((f) => (f ? { ...f, ...patch } : f));
 
@@ -204,7 +222,12 @@ export default function App() {
         {status && filters && base && (
           <>
             <Summary status={status} changes={changes} meta={meta} onOpen={openForest} />
+            <p className="basis">
+              마지막 갱신 {new Date(status.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {' · '}출처 숲나들e 월별 예약현황 · 기준 1박 체크인 날짜, 약 3시간마다 갱신
+            </p>
             <FilterBar
+              favCount={favs.size}
               filters={filters}
               base={base}
               set={set}
@@ -229,18 +252,26 @@ export default function App() {
             <p className="mobile-count" aria-live="polite">
               조건에 맞는 휴양림 <b>{withHits.length}</b>곳 · 객실·날짜 <b>{withHits.reduce((n, r) => n + r.total, 0).toLocaleString()}</b>건
             </p>
+            <div className="alert-bar">
+              <span>원하는 자리가 없나요? 지금 조건(지역·휴양림·날짜·시설)에 새 빈자리가 생기면 이메일로 알려 드려요.</span>
+              <button className="alert-btn" onClick={() => askAlert()}><span aria-hidden>🔔</span> 빈자리 알림 받기</button>
+            </div>
+            {filters.mine && favs.size === 0 && (
+              <p className="hint">아직 내 휴양림이 없습니다. 목록이나 상세 화면의 ☆를 눌러 자주 보는 휴양림을 추가하세요(이 브라우저에만 저장).</p>
+            )}
             <div role="tabpanel" id="view-panel" aria-labelledby={`tab-${filters.view}`}>
             {withHits.length === 0 ? (
               <div className="panel empty">
                 <p><b>조건에 맞는 빈자리가 없습니다.</b></p>
                 <p className="fsub">기간을 넓히거나, 지역·상세 조건을 줄이거나, '대기 포함'을 켜 보세요.</p>
                 <div className="empty-actions">
+                  <button className="btn" onClick={() => askAlert()}><span aria-hidden>🔔</span> 빈자리 나면 알림 받기</button>
                   {!filters.wait && <button className="btn" onClick={() => set({ wait: true })}>대기 포함하기</button>}
                   <button className="btn primary" onClick={() => setFilters({ ...base, view: filters.view })}>조건 초기화</button>
                 </div>
               </div>
             ) : <>
-            {filters.view === 'table' && <TableView results={results} status={status} filters={filters} set={set} onOpen={openForest} />}
+            {filters.view === 'table' && <TableView results={results} status={status} filters={filters} set={set} onOpen={openForest} favs={favs} toggleFav={toggleFav} fresh={fresh} />}
             {filters.view === 'map' && (
               <Suspense fallback={<div className="panel loading">지도를 불러오는 중…</div>}>
                 <MapView results={results} status={status} filters={filters} origin={origin} onOpen={openForest} locate={locate} />
@@ -263,25 +294,44 @@ export default function App() {
             공휴일은 주말 판단에만 쓰이며 연 1회 갱신합니다.
           </p>
           <p>
-            <b>개인정보 처리 안내</b> · 회원가입·로그인이 없고 이름·연락처 같은 개인정보를 받지 않습니다.
-            화면 테마(라이트/다크) 설정은 이 브라우저에 저장되며, '내 위치'는 브라우저 안에서 거리 계산에만 쓰이고 밖으로 보내지 않습니다.
-            방문 통계를 위해 Google Analytics가 쿠키로 익명 이용 정보(방문 페이지, 기기·브라우저 종류, 대략적 지역)를 수집합니다.
-            브라우저 설정에서 쿠키를 차단하면 수집되지 않습니다.
+            <b>개인정보 처리 안내</b> · 회원가입·로그인이 없습니다. 테마와 내 휴양림(즐겨찾기)은 이 브라우저에만 저장되고, '내 위치'는 브라우저 안에서 거리 계산에만 씁니다.
+            방문 통계(Google Analytics 쿠키)와 빈자리 알림 신청 때 받는 이메일 등 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 보세요.
           </p>
-          <nav className="links" aria-label="바깥 링크">
+          <nav className="links" aria-label="사이트 링크">
+            <a href="/forest/">휴양림별 빈자리</a>
+            <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a>
             <a href="/faq.html">자주 묻는 질문</a>
+            <a href="/privacy">개인정보처리방침</a>
+            <a href="/terms">이용약관</a>
             <a href="https://github.com/chanyong/forest-trip/issues" target="_blank" rel="noreferrer">문의·수집 중단 요청</a>
             <a href="https://github.com/chanyong/forest-trip" target="_blank" rel="noreferrer">소스 코드</a>
             <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>
           </nav>
+          <div className="others">
+            <b>운영자의 다른 서비스</b>
+            <nav className="links" aria-label="운영자의 다른 서비스">
+              <a href="https://ddalkkakrank.kr" target="_blank" rel="noopener">딸깍랭크 <small>AI 웹서비스 랭킹</small></a>
+              <a href="https://www.airmoa.kr" target="_blank" rel="noopener">에어모아 <small>항공권 특가 모음</small></a>
+              <a href="https://zoommytrip.kr" target="_blank" rel="noopener">내여행 찾아줌 <small>마일리지 좌석</small></a>
+              <a href="https://ittaeda.com" target="_blank" rel="noopener">이때다 <small>호텔 날짜별 가격</small></a>
+              <a href="https://etfx.kr" target="_blank" rel="noopener">ETFX <small>ETF 구성종목 분석</small></a>
+              <a href="https://cardmatch.kr" target="_blank" rel="noopener">카드매치 <small>카드 추천</small></a>
+              <a href="https://myapgujeong.kr" target="_blank" rel="noopener">내 압구정 <small>아파트 실거래</small></a>
+              <a href="https://www.ipsion.kr" target="_blank" rel="noopener">입시on <small>대입 경쟁률</small></a>
+              <a href="https://auto-insu-compare.vercel.app" target="_blank" rel="noopener">자동차보험 환급 비교</a>
+              <a href="https://fpl-live-production-34f4.up.railway.app" target="_blank" rel="noopener">FPL Live</a>
+            </nav>
+          </div>
         </footer>
       </main>
 
       {forest && status && filters && (
         <Suspense fallback={null}>
-          <ForestDrawer forest={forest} status={status} filters={filters} onClose={closeDrawer} />
+          <ForestDrawer forest={forest} status={status} filters={filters} onClose={closeDrawer}
+            fav={favs.has(forest.id)} toggleFav={() => toggleFav(forest.id)} onAlert={() => askAlert(forest)} />
         </Suspense>
       )}
+      {notice && <div className="toast" role="status" onClick={() => setNotice('')}>{notice}</div>}
     </>
   );
 }

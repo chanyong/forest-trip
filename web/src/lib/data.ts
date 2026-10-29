@@ -31,6 +31,7 @@ export interface Forest {
   checkout?: string | null;
   naver?: { id: string; v: number; b: number; s: number | null } | null; // 네이버 방문자·블로그 리뷰 수, 별점
   booking?: Partial<Record<Kind, { we: [number, number]; wd: [number, number] }>>; // 시설별 주말·평일 [예약된 날, 예약 받는 날]
+  policy?: { cycle?: string; day?: string | null; time?: string | null; weeks?: number | null; lastDay?: string | null } | null; // 숲나들e 예약 오픈 정책
   goods: Goods[];
 }
 
@@ -111,7 +112,8 @@ export interface Filters {
   q: string;
   weRate: RateCond; // 주말 예약률 조건
   wdRate: RateCond; // 평일 예약률 조건
-  sort: 'date' | 'count' | 'name' | 'dist' | 'review' | 'popular' | 'price';
+  mine: boolean; // 즐겨찾기(내 휴양림)만
+  sort: 'date' | 'count' | 'name' | 'dist' | 'review' | 'popular' | 'price' | 'recent';
 }
 
 // 오늘처럼 모든 객실이 '정보 없음'인 앞쪽 날짜는 건너뛴다
@@ -137,6 +139,7 @@ export const defaultFilters = (start: string, days: number, skip = 0): Filters =
   q: '',
   weRate: '',
   wdRate: '',
+  mine: false,
   sort: 'date',
 });
 
@@ -153,6 +156,7 @@ export function filtersFromURL(base: Filters): Filters {
   if (p.get('people')) f.people = +p.get('people')!;
   f.weekend = p.get('weekend') === '1';
   f.wait = p.get('wait') === '1';
+  f.mine = p.get('mine') === '1';
   if (p.get('q')) f.q = p.get('q')!;
   if (RATE_CONDS.some((c) => c.value === p.get('we'))) f.weRate = p.get('we') as RateCond;
   if (RATE_CONDS.some((c) => c.value === p.get('wd'))) f.wdRate = p.get('wd') as RateCond;
@@ -170,6 +174,7 @@ export function filtersToURL(f: Filters, base: Filters) {
   if (f.people) p.set('people', String(f.people));
   if (f.weekend) p.set('weekend', '1');
   if (f.wait) p.set('wait', '1');
+  if (f.mine) p.set('mine', '1');
   if (f.q) p.set('q', f.q);
   if (f.weRate) p.set('we', f.weRate);
   if (f.wdRate) p.set('wd', f.wdRate);
@@ -197,6 +202,28 @@ export interface ForestResult {
   rate: Rate;
   prices: KindPrice[]; // 시설별 주말 평균 요금(고른 시설만)
   price: KindPrice | null; // 가격순 정렬 기준: 숙소 평균, 숙소가 없으면 야영장 평균
+  fresh: number; // 조건에 맞는 자리 중 최근 RECENT_HOURS 안에 새로 빈(취소 등) 객실·날짜 수
+  freshAt: number; // 그중 가장 최근 확인 시각(ms)
+  newNow: number; // 그중 직전 수집 대비 이번 수집에서 새로 빈 수
+}
+
+// ---- 새로 빈 자리 ----
+// changes.json(수집기가 직전 수집 대비 완료·대기 → 예약가능으로 바뀐 자리를 72시간 보관)을 객실·날짜로 찾기 쉽게 만든다
+export const RECENT_HOURS = 24;
+export type Fresh = Map<string, Map<number, number>>; // goodsId -> 날짜 인덱스 -> 확인 시각(ms)
+export function freshIndex(status: Status, changes: Change[]): { fresh: Fresh; latestAt: number } {
+  const fresh: Fresh = new Map();
+  const start = isoOf(status.start);
+  const latestAt = Date.parse(status.generatedAt);
+  for (const c of changes) {
+    const at = Date.parse(c.at);
+    const i = diffISO(start, isoOf(c.date));
+    if (i < 0 || !(at > 0)) continue;
+    let m = fresh.get(c.goods);
+    if (!m) fresh.set(c.goods, (m = new Map()));
+    if (!(m.get(i)! >= at)) m.set(i, at);
+  }
+  return { fresh, latestAt };
 }
 
 export function goodsPasses(g: Goods, f: Filters) {
@@ -248,7 +275,10 @@ export function forestPasses(fo: Forest, f: Filters) {
   return true;
 }
 
-export function compute(status: Status, f: Filters, origin?: { lat: number; lng: number } | null): ForestResult[] {
+export interface Extra { favs?: Set<string>; fresh?: Fresh; latestAt?: number }
+
+export function compute(status: Status, f: Filters, origin?: { lat: number; lng: number } | null, extra: Extra = {}): ForestResult[] {
+  const recentFrom = (extra.latestAt ?? Date.parse(status.generatedAt)) - RECENT_HOURS * 3600e3;
   const start = isoOf(status.start);
   const lo = Math.max(0, diffISO(start, f.from));
   const hi = Math.min(status.days - 1, diffISO(start, f.to));
@@ -258,12 +288,14 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
   const out: ForestResult[] = [];
   for (const fo of status.forests) {
     if (!forestPasses(fo, f)) continue;
+    if (f.mine && !extra.favs?.has(fo.id)) continue;
     const rate = rateOf(fo, f.kinds);
     if (!ratePasses(rate.we, f.weRate) || !ratePasses(rate.wd, f.wdRate)) continue;
     const goods: GoodsResult[] = [];
     const hitDates = new Map<number, number>();
     let total = 0;
     let first = Infinity;
+    let fresh = 0, freshAt = 0, newNow = 0;
     for (const g of fo.goods) {
       if (!goodsPasses(g, f)) continue;
       const hits: number[] = [];
@@ -274,6 +306,12 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
         if (ok) {
           hits.push(i);
           hitDates.set(i, (hitDates.get(i) || 0) + 1);
+          const at = extra.fresh?.get(g.id)?.get(i);
+          if (at && at >= recentFrom && g.s[i] === 'A') {
+            fresh++;
+            if (at > freshAt) freshAt = at;
+            if (at === extra.latestAt) newNow++;
+          }
         }
       }
       if (hits.length) {
@@ -284,7 +322,7 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
     }
     const prices = pricesOf(fo, f.kinds);
     const price = prices.find((p) => p.kind === '01') ?? prices[0] ?? null;
-    const r: ForestResult = { forest: fo, goods, hitDates, total, first, rate, prices, price };
+    const r: ForestResult = { forest: fo, goods, hitDates, total, first, rate, prices, price, fresh, freshAt, newNow };
     if (origin && fo.lat != null && fo.lng != null) r.dist = haversine(origin, { lat: fo.lat, lng: fo.lng! });
     out.push(r);
   }
@@ -296,6 +334,7 @@ export function compute(status: Status, f: Filters, origin?: { lat: number; lng:
     review: (a: ForestResult, b: ForestResult) => reviewTotal(b.forest) - reviewTotal(a.forest),
     popular: (a: ForestResult, b: ForestResult) => (b.rate.we ?? -1) - (a.rate.we ?? -1) || (b.rate.wd ?? -1) - (a.rate.wd ?? -1),
     price: (a: ForestResult, b: ForestResult) => byPrice(a, b) || a.first - b.first,
+    recent: (a: ForestResult, b: ForestResult) => b.freshAt - a.freshAt || b.fresh - a.fresh || a.first - b.first,
   }[f.sort === 'dist' && !origin ? 'date' : f.sort] || ((a: ForestResult, b: ForestResult) => a.first - b.first);
   return out.sort((a, b) => (b.total ? 1 : 0) - (a.total ? 1 : 0) || by(a, b));
 }
@@ -355,6 +394,7 @@ export const SORTS: { value: Filters['sort']; label: string }[] = [
   { value: 'review', label: '리뷰 많은 순' },
   { value: 'popular', label: '주말 예약률 높은 순' },
   { value: 'price', label: '주말 요금 낮은 순' },
+  { value: 'recent', label: `최근 ${RECENT_HOURS}시간 새로 빈 순` },
   { value: 'name', label: '이름순' },
   { value: 'dist', label: '가까운 거리순' },
 ];

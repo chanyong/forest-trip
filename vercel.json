@@ -36,6 +36,15 @@
       ]
     },
     {
+      "source": "/alerts-feed.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, s-maxage=300, stale-while-revalidate=900"
+        }
+      ]
+    },
+    {
       "source": "/assets/(.*)",
       "headers": [
         {
@@ -56,26 +65,58 @@
   ],
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [
         {
           "type": "host",
           "value": "www.supgaja.com"
         }
       ],
-      "destination": "https://supgaja.com/:path*",
-      "permanent": true
+      "destination": "https://supgaja.com/$1",
+      "statusCode": 301
     },
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [
         {
           "type": "host",
           "value": "forest-trip-seven.vercel.app"
         }
       ],
-      "destination": "https://supgaja.com/:path*",
-      "permanent": true
+      "destination": "https://supgaja.com/$1",
+      "statusCode": 301
+    },
+    {
+      "source": "/faq",
+      "destination": "/faq.html",
+      "statusCode": 301
+    },
+    {
+      "source": "/faq/",
+      "destination": "/faq.html",
+      "statusCode": 301
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/forest/:id",
+      "destination": "/forest/:id/index.html"
+    },
+    {
+      "source": "/vacancy/:r",
+      "destination": "/vacancy/:r/index.html"
+    },
+    {
+      "source": "/vacancy/:r/:p",
+      "destination": "/vacancy/:r/:p/index.html"
     }
   ]
 }

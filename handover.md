@@ -1,6 +1,6 @@
 # 숲가자(supgaja.com) 인수인계
 
-최종 갱신: 2026-10-28
+최종 갱신: 2026-10-30
 다음 Claude Code 세션은 이 파일을 먼저 읽고 사이트 관리를 이어 간다. 세부 기술 설명은 `README.md`에 있다.
 
 ---
@@ -10,9 +10,9 @@
 | 항목 | 값 |
 |---|---|
 | 서비스 | 숲가자: 전국 자연휴양림(숲나들e) 숙소·야영장 빈자리를 목록·지도·달력·월간 그리드로 보여 주는 비공식 참고용 정적 사이트 |
-| 대표 주소 | https://supgaja.com (www.supgaja.com과 forest-trip-seven.vercel.app은 supgaja.com으로 308 영구 이동) |
+| 대표 주소 | https://supgaja.com (www.supgaja.com과 forest-trip-seven.vercel.app은 supgaja.com으로 301 영구 이동, `vercel.json` redirects) |
 | 저장소 | github.com/chanyong/forest-trip (public), 브랜치 `main` |
-| 로컬 폴더 | `~/Library/CloudStorage/Dropbox/20_Dev/forest-trip` (Dropbox로 Windows와 동기화) |
+| 로컬 폴더 | `~/Library/CloudStorage/Dropbox/20_Dev/forest-trip` (Dropbox로 Windows와 동기화, 읽기 전용으로 쓰기 권장). git 작업은 `~/dev/forest-trip` clone 에서 |
 | 호스팅 | Vercel 팀 `chanyong2`, 프로젝트 `forest-trip` (prj_ZlE3qoEYbnhWzrmEg4rITede3IYn). `main`에 push하면 자동 배포 |
 | 도메인 | supgaja.com. 2026-10-27 호스팅케이알(Megazone)에서 등록. 네임서버는 Vercel DNS(ns1/ns2.vercel-dns.com) |
 | 수집 | GitHub Actions `crawl.yml`. 매시 7분에 깨어나 데이터가 150분 이상 묵었을 때만 수집하고, 결과 JSON을 커밋한다 |
@@ -55,7 +55,13 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
   └─ node collector/prices.mjs        ─▶ data/prices.json (객실별 [비수기 평일, 비수기 주말, 성수기 평일, 성수기 주말]) 7,406/7,464실
 ```
 
-- `crawl.mjs`는 `master`, `naver`, `prices` 파일을 읽어 `status.json`에 합친다. 합치는 값은 forest.naver, forest.booking(예약률), goods.pr(요금)이다.
+- `crawl.mjs`는 `master`, `naver`, `prices` 파일을 읽어 `status.json`에 합친다. 합치는 값은 forest.naver, forest.booking(예약률), goods.pr(요금), forest.policy(예약 오픈 정책, 2026-10-30 추가)다.
+- **빌드 때 정적 생성**(`web/scripts/build-static.mjs`, `npm run build` 마지막 단계): 수집 봇의 data 커밋마다 Vercel 이 다시 빌드하므로 "수집 때마다" 새로 만들어진다. 저장소에는 커밋하지 않는다(dist 에만 생성).
+  - `/alerts-feed.json` 빈자리 이메일 알림 피드(아래 '빈자리 이메일 알림' 장)
+  - `/forest/` 전체 목록, `/forest/<insttId>` 휴양림별 페이지 185개(날짜별 빈자리, 최근 새로 빈 자리, 예약 오픈 안내, 같은 지역 휴양림 링크, LodgingBusiness·BreadcrumbList JSON-LD)
+  - `/vacancy/<지역>/`, `/vacancy/<지역>/this-weekend/`, `/vacancy/<지역>/next-weekend/` 지역·시기 랜딩 29개(지역 slug: all, gyeonggi, gangwon, chungbuk, chungnam, jeonbuk, jeonnam, gyeongbuk, gyeongnam, jeju)
+  - `/sitemap.xml`(위 페이지 포함 약 220개 URL, `public/sitemap.xml`은 대체용), `faq.html` 의 FAQPage JSON-LD(질문·답 원문에서 생성)
+- 예약 오픈 안내(`web/src/lib/policy.mjs`, 웹·정적 생성 공용): 숲나들e 예약정책 값(WEEK=매주 rsrvtBgDt 요일(1=일), MON=매월 rsrvtBgDt 일, rsrvtBgnTm 시각, dytmCycleEstbsVal 주)으로 계산한 마지막 날이 숲나들e 가 알려 준 현재 마지막 예약일과 **맞을 때만** 규칙·다음 오픈을 보여 준다(10-29 전수 확인 185곳 중 184곳 일치, 청평(사립)만 불일치 → 마지막 날만 표시).
 - `collector/stats.mjs`는 예약률 계산을 맡는다. 예약된 날은 대기·F, 예약 받는 날은 A+대기+F로 센다. 주말은 체크인 다음 날이 토·일·공휴일인 숙박이고, 표본이 10 미만이면 표시하지 않는다.
 - `collector/backfill-stats.mjs`는 집계 방식이나 요금을 바꿨을 때 기존 status.json을 다시 계산하는 1회용 스크립트다.
 - `web/src/lib/holidays.json`은 공휴일 목록이다. 웹과 수집기가 같이 쓰며 연 1회 갱신한다.
@@ -76,7 +82,9 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | `components/Price.tsx`, `Rate.tsx`, `Reviews.tsx` | 요금 표시(숙소 6.9만 · 야영 3만), 예약률 막대, 네이버 리뷰 배지 |
 | `index.html` | 메타·OG·JSON-LD, status.json 조기 요청(`window.__statusReq`), 글꼴 비동기 로드, GA4(supgaja.com 호스트에서만 동작) |
 | `public/` | 404.html, og-image.png(1200×630, 숲가자 supgaja.com), 아이콘, manifest, robots.txt, sitemap.xml |
-| `vercel.json` | 보안 헤더, 캐시, www·vercel.app → supgaja.com 리디렉션 |
+| `vercel.json` | 보안 헤더, 캐시, www·vercel.app → supgaja.com 301, `/faq`→`/faq.html` 301, `/privacy`·`/terms`·`/forest/:id`·`/vacancy/...` rewrites |
+| `public/privacy.html`, `terms.html` | 개인정보처리방침(GA4·빈자리 알림 이메일·의견함·브라우저 저장)·이용약관. 주소는 `/privacy`, `/terms` |
+| `lib/alerts.ts`, `lib/favs.ts` | 알림 버튼(조건 → filters 변환, alerts.js 지연 로드), 내 휴양림(localStorage `favForests`) |
 
 ### QC (`qa/`)
 - `cd qa && npm run qc`로 배포 사이트를 점검한다. 3개 엔진 × 14개 화면 크기에서 접근성(axe), 터치 영역, 키보드, 뒤로가기, SEO, 링크를 본다.
@@ -109,6 +117,8 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | 10-28 | (이번 커밋) | 배포할 때마다 handover.md를 갱신하는 규칙 추가 |
 | 10-28 | (이번 커밋) | 자주 묻는 질문 `web/public/faq.html`(정적, 6개 분류 24문항, 문의는 GitHub Issues), 머리글 `?` 아이콘(`.faq-link`)·바닥글 링크·sitemap 추가 |
 | 10-28 | (이번 커밋) | FAQ 버튼을 초록 '자주 묻는 질문' 글자 버튼으로(모바일 'FAQ'), FAQ 목록 테두리·그림자·펼친 질문 강조 |
+
+| 10-30 | (이번 커밋) | 빈자리 이메일 알림 피드 `/alerts-feed.json`·알림 버튼(공통 모듈 계약 v1), 새로 빈 자리 NEW 표시·'최근 24시간 새로 빈 순' 정렬, 내 휴양림(즐겨찾기), 휴양림별·지역/시기 정적 SEO 페이지와 sitemap, 예약 오픈 안내(수집기에 policy 추가), www 301·/faq 연결, 개인정보처리방침·이용약관, 갱신·출처 배지, 운영자의 다른 서비스 링크, Organization·FAQPage JSON-LD |
 
 ### 가격순 정렬 규칙 (사용자와 합의)
 - 숙소와 야영장 요금을 섞어 비교하지 않는다.
@@ -147,11 +157,17 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 - **수시: QC**
   - 기능을 바꾼 뒤 `cd qa && npm run qc`를 실행한다.
 
+5. **빈자리 이메일 알림 중앙 모듈 연결 확인**
+   - 딸깍랭크(ai-ranking 저장소)에 `alerts.js`·`/api/alerts/subscribe`·피드 읽는 cron 이 생기면, 숲가자 알림 버튼을 눌러 모달이 뜨는지, 피드 조건이 맞는지 확인한다. 지금은 alerts.js 가 404라 버튼이 '곧 제공' 안내만 띄운다.
+   - 중앙 SITES 에 `supgaja.com` 이 등록돼야 접수된다.
+   - 피드가 약 2.0MB(gzip 약 140KB). 휴양림이 늘어 2MB 를 크게 넘으면 기간을 줄이거나 필드를 더 줄인다.
+   - 같은 자리(id)가 찼다가 다시 비면 중앙이 재알림할지는 중앙 정책에 달려 있다(취소표 알림이 핵심이라 재알림이 바람직).
+6. **GSC 새 페이지 색인**: sitemap 에 휴양림·지역 페이지 약 215개가 늘었다. GSC 에서 sitemap 다시 제출(사용자 몫).
+
 ### 아이디어 (사용자가 원하면)
 - 가격 필터(예: 1박 ○만 원 이하)
 - 요금 자동 갱신: prices.mjs를 Actions에 월 1회로 추가
 - 지도 마커를 요금으로 표시
-- 빈자리 알림(웹푸시/이메일). 서버가 필요하므로 구조 변경 확인이 필요하다
 - supgaja.kr 추가 등록과 리디렉션. 등록 여부는 사용자가 결정한다
 - 상표: 키프리스에서 '숲가자' 검색은 아직 안 함
 
@@ -190,3 +206,14 @@ cd qa && npm run qc                                 # 배포 사이트 QC
 - 모든 공개 페이지 오른쪽(또는 왼쪽) 아래에 운영자 사이트 공통 '의견·질문' 버튼이 있다. `<script src="https://ddalkkakrank.kr/feedback.js" defer ...>` 한 줄(`web/index.html`, `web/public/faq.html`·`404.html`).
 - 방문자가 보낸 유형·내용·선택 연락처·페이지 주소는 딸깍랭크(ai-ranking 저장소) 서버의 의견함 `site_feedback` 에 모이고, 관리자 화면 `https://ddalkkakrank.kr/admin/feedback` 에서 본다. 허용 출처는 ai-ranking `src/lib/feedback.ts` 의 `SITES` — **도메인을 바꾸면 거기에도 추가**해야 접수된다.
 - 언어는 `<html lang>` 을 따라 한국어/영어 자동. 버튼 위치·숨김 옵션(`data-side`, `data-avoid`, `data-hide`)은 feedback.js 맨 위 주석 참고.
+
+## 빈자리 이메일 알림 (2026-10-30)
+- 운영자 사이트 공통 알림 모듈 계약 v1(중앙: 딸깍랭크 https://ddalkkakrank.kr). 숲가자에는 서버·DB 가 없고, **공개 피드만 제공**하고 구독·발송은 중앙이 한다.
+- **피드 URL: https://supgaja.com/alerts-feed.json** (빌드 때 생성, 캐시 s-maxage 300초)
+  - 항목 단위: 휴양림 × 체크인 날짜 × 시설 유형. 그날 1박 '예약가능(A)' 객실이 1개 이상인 것만 담는다(대기는 제외).
+  - `id`: `<insttId>:<YYYY-MM-DD>:<숙소|야영장>` (수집마다 같음)
+  - `attrs`: `forest`(이름에서 '자연휴양림' 뺀 것, 예 "유명산"), `forestId`(insttId), `region`(sidoName: 서울/인천/경기, 강원, 충북, 대전/충남, 전북, 전남/광주, 대구/경북, 부산/경남, 제주), `date`(YYYY-MM-DD), `type`(숙소|야영장), `weekday`(일~토), `weekend`(true=체크인 다음 날이 토·일·공휴일), `people`(그날 빈 객실 중 최대 정원), `rooms`(빈 객실 수)
+  - `price` 는 넣지 않았다(성수기·주말 구분이 불확실).
+- **버튼**: 목록 위 '🔔 빈자리 알림 받기', 결과 없음 화면, 휴양림 상세, 정적 페이지(휴양림별·랜딩). 누르면 `https://ddalkkakrank.kr/alerts.js` 를 그때 불러와 `SiteAlerts.open({site:"supgaja.com", label, filters})` 를 부른다. 못 불러오면 '곧 제공' 안내(웹은 토스트, 정적 페이지는 alert).
+  - 조건 변환(`web/src/lib/alerts.ts`): 열린 휴양림 → `forestId eq`, 검색어·내 휴양림·운영 구분 → `forestId in`(40곳 이하일 때), 지역 → `region eq/in`, 기간 → `date between`, 주말만 → `weekend eq true`, 시설 1개 → `type eq`, 인원 → `people gte`. 전국 + 2주 넘는 기간은 너무 넓어 막는다. 숙박 일수(2박 이상)·대기·편의시설 조건은 알림에 반영하지 않는다.
+- 처리방침 `/privacy` 에 알림 이메일 항목을 적었다(보관: 해지 시 삭제, 확인 안 한 신청은 기한 후 삭제 — 중앙 구현과 다르면 맞춰 고칠 것).

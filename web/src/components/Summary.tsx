@@ -56,7 +56,7 @@ export function Summary({ status, changes, onOpen }: Props) {
               const iso = isoOf(c.date);
               return (
                 <button key={c.goods + c.date + c.at} className="change-card" onClick={() => onOpen(c.forest)}>
-                  <div className="t">{g.forest}</div>
+                  <div className="t">{g.forest}{c.at === status.generatedAt && <span className="badge new">NEW</span>}</div>
                   <div className="m">{g.cls} {g.goods}</div>
                   <div><span className="d">{fmtDate(iso)}</span> <span className="m">{statusLabel(c.from)} → 예약가능</span></div>                </button>
               );

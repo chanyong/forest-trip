@@ -5,4 +5,7 @@
   <url><loc>https://supgaja.com/?view=calendar</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
   <url><loc>https://supgaja.com/?view=grid</loc><changefreq>hourly</changefreq><priority>0.6</priority></url>
   <url><loc>https://supgaja.com/faq.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://supgaja.com/privacy</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
+  <url><loc>https://supgaja.com/terms</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
+  <!-- 빌드 때 web/scripts/build-static.mjs 가 휴양림·지역 페이지까지 넣은 sitemap 으로 덮어쓴다 -->
 </urlset>
