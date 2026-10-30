@@ -123,9 +123,10 @@ a { color: var(--brand); }
 
 /* summary */
 .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 12px; }
-.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+/* 클릭 대상이 아닌 요약이므로 첫 화면을 덜 차지하게 납작하게 둔다(검색·필터가 위로 올라오도록) */
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 14px; }
 .stat .k { font-size: 13px; color: var(--ink-3); }
-.stat .v { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.stat .v { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
 .stat .v small { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-left: 4px; }
 @media (max-width: 760px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat .v { font-size: 20px; } }
 
