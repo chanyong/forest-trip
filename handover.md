@@ -219,3 +219,6 @@ cd qa && npm run qc                                 # 배포 사이트 QC
 - **버튼**: 목록 위 '🔔 빈자리 알림 받기', 결과 없음 화면, 휴양림 상세, 정적 페이지(휴양림별·랜딩). 누르면 `https://ddalkkakrank.kr/alerts.js` 를 그때 불러와 `SiteAlerts.open({site:"supgaja.com", label, filters})` 를 부른다. 못 불러오면 '곧 제공' 안내(웹은 토스트, 정적 페이지는 alert).
   - 조건 변환(`web/src/lib/alerts.ts`): 열린 휴양림 → `forestId eq`, 검색어·내 휴양림·운영 구분 → `forestId in`(40곳 이하일 때), 지역 → `region eq/in`, 기간 → `date between`, 주말만 → `weekend eq true`, 시설 1개 → `type eq`, 인원 → `people gte`. 전국 + 2주 넘는 기간은 너무 넓어 막는다. 숙박 일수(2박 이상)·대기·편의시설 조건은 알림에 반영하지 않는다.
 - 처리방침 `/privacy` 에 알림 이메일 항목을 적었다(보관: 해지 시 삭제, 확인 안 한 신청은 기한 후 삭제 — 중앙 구현과 다르면 맞춰 고칠 것).
+
+### 2026-10-30 디자인 점검 반영 (`03dc4e7`)
+- 상단 요약 지표 4칸(클릭 대상 아님)을 납작하게(padding 8px·값 20px) 해 검색·필터가 위로. 전체 점검 리포트: `~/.gstack/projects/gstack-github/designs/design-audit-20261030/design-audit-11-sites.md`
