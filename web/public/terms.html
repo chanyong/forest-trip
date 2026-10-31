@@ -44,6 +44,24 @@ th{background:var(--surface-2);color:var(--ink)}
 footer{max-width:820px;margin:0 auto;padding:20px 16px 96px;border-top:1px solid var(--line);font-size:.82rem;color:var(--ink-3)}
 footer nav{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0}
 footer a{color:var(--ink-2)}
+/* 운영자의 다른 서비스 띠: src/index.css 의 .netband 와 같은 규칙 */
+.netwrap{max-width:820px;margin:32px auto 24px;padding:0 16px}
+.netband { margin: 0; padding: 24px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); font-size: 14px; word-break: keep-all; overflow-wrap: break-word; }
+.netband-in { padding: 0 16px; }
+.netband h2 { margin: 0 0 16px; font-size: 18px; font-weight: 700; line-height: 1.4; color: var(--ink); }
+.netband ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.netband ul a { display: flex; height: 100%; box-sizing: border-box; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--ink); text-decoration: none; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.netband ul a:hover { transform: translateY(-2px); border-color: var(--brand); box-shadow: 0 4px 10px rgba(0, 0, 0, .12); }
+.netband ul a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.netband .nb-i { width: 32px; flex-shrink: 0; text-align: center; font-size: 24px; line-height: 1; }
+.netband .nb-t { min-width: 0; }
+.netband .nb-t b { margin: 0; display: block; font-size: 16px; font-weight: 700; line-height: 1.375; color: var(--ink); }
+.netband .nb-t span { display: block; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+@media (min-width: 640px) { .netband ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .netband ul { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .netband ul a { transition: none; } .netband ul a:hover { transform: none; } }
+@media (max-width: 480px) { .netwrap { padding: 0; } .netband { border-left-width: 0; border-right-width: 0; border-radius: 0; } }
 </style>
 </head>
 <body>
@@ -83,10 +101,20 @@ footer a{color:var(--ink-2)}
 <h2>6. 약관 변경과 문의</h2>
 <p>약관이 바뀌면 이 페이지에 시행일과 함께 알립니다. 문의는 <a href="mailto:cyjung@gmail.com">cyjung@gmail.com</a> 또는 화면 아래 '의견·질문' 버튼으로 보내 주세요. 개인정보 처리는 <a href="/privacy">개인정보처리방침</a>을 따릅니다.</p>
 </main>
+<div class="netwrap"><nav class="netband" aria-label="운영자의 다른 서비스"><div class="netband-in"><h2>운영자의 다른 서비스</h2><ul>
+<li><a href="https://www.airmoa.kr/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">✈️</span><span class="nb-t"><b>에어모아</b><span>항공권 특가 모음</span></span></a></li>
+<li><a href="https://zoommytrip.kr/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">🧳</span><span class="nb-t"><b>내여행 찾아줌</b><span>마일리지 좌석</span></span></a></li>
+<li><a href="https://ittaeda.com/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">🏨</span><span class="nb-t"><b>이때다</b><span>호텔 날짜별 가격</span></span></a></li>
+<li><a href="https://etfx.kr/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">📊</span><span class="nb-t"><b>ETFX</b><span>ETF 구성종목 분석</span></span></a></li>
+<li><a href="https://cardmatch.kr/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">💳</span><span class="nb-t"><b>카드매치</b><span>카드 추천</span></span></a></li>
+<li><a href="https://myapgujeong.kr/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">🏢</span><span class="nb-t"><b>내 압구정</b><span>아파트 실거래</span></span></a></li>
+<li><a href="https://auto-insu-compare.vercel.app/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">🚗</span><span class="nb-t"><b>자동차보험 환급 비교</b><span>보험료 비교</span></span></a></li>
+<li><a href="https://www.ipsion.kr/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">🎓</span><span class="nb-t"><b>입시on</b><span>대입 경쟁률</span></span></a></li>
+<li><a href="https://fpl-live-production-34f4.up.railway.app/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">⚽</span><span class="nb-t"><b>FPL Live</b><span>판타지 프리미어리그</span></span></a></li>
+<li><a href="https://ddalkkakrank.kr/?utm_source=supgaja&amp;utm_medium=footer_network" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">🏆</span><span class="nb-t"><b>딸깍랭크</b><span>AI 서비스 랭킹</span></span></a></li>
+</ul></div></nav></div>
 <footer>
   <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림별 빈자리</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a></nav>
-  <div><b>운영자의 다른 서비스</b>
-  <nav aria-label="운영자의 다른 서비스"><a href="https://ddalkkakrank.kr" target="_blank" rel="noopener">딸깍랭크</a><a href="https://www.airmoa.kr" target="_blank" rel="noopener">에어모아</a><a href="https://zoommytrip.kr" target="_blank" rel="noopener">내여행 찾아줌</a><a href="https://ittaeda.com" target="_blank" rel="noopener">이때다</a><a href="https://etfx.kr" target="_blank" rel="noopener">ETFX</a><a href="https://cardmatch.kr" target="_blank" rel="noopener">카드매치</a><a href="https://myapgujeong.kr" target="_blank" rel="noopener">내 압구정</a><a href="https://www.ipsion.kr" target="_blank" rel="noopener">입시on</a><a href="https://auto-insu-compare.vercel.app" target="_blank" rel="noopener">자동차보험 환급 비교</a><a href="https://fpl-live-production-34f4.up.railway.app" target="_blank" rel="noopener">FPL Live</a></nav></div>
 </footer>
 <script src="https://ddalkkakrank.kr/feedback.js" defer data-color="#0b6e4f"></script>
 </body>
