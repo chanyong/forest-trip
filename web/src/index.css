@@ -553,7 +553,21 @@ main.wrap { padding-top: 20px; }
 .dchip.new { box-shadow: inset 0 0 0 2px #e08a3c; font-weight: 700; }
 .policy { margin-top: 10px; font-size: 13px; color: var(--ink-2); background: var(--surface-2); border-left: 3px solid var(--brand); border-radius: 8px; padding: 8px 12px; }
 .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 200; max-width: min(92vw, 440px); background: #1d2420; color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); cursor: pointer; }
-footer .others { margin-top: 10px; }
-footer .others > b { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 2px; }
-footer .others small { color: var(--ink-3); font-size: 11px; }
+/* 운영자의 다른 서비스 띠(공통 디자인, 이슈 #2). 데이터: src/lib/network.json */
+.netband { margin: 0 0 24px; padding: 24px 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); font-size: 14px; word-break: keep-all; overflow-wrap: break-word; }
+.netband-in { padding: 0 16px; }
+.netband h2 { margin: 0 0 16px; font-size: 18px; font-weight: 700; line-height: 1.4; color: var(--ink); }
+.netband ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.netband ul a { display: flex; height: 100%; box-sizing: border-box; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--ink); text-decoration: none; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.netband ul a:hover { transform: translateY(-2px); border-color: var(--brand); box-shadow: 0 4px 10px rgba(0, 0, 0, .12); }
+.netband ul a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.netband .nb-i { width: 32px; flex-shrink: 0; text-align: center; font-size: 24px; line-height: 1; }
+.netband .nb-t { min-width: 0; }
+.netband .nb-t b { margin: 0; display: block; font-size: 16px; font-weight: 700; line-height: 1.375; color: var(--ink); }
+.netband .nb-t span { display: block; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+@media (min-width: 640px) { .netband ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .netband ul { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .netband ul a { transition: none; } .netband ul a:hover { transform: none; } }
+@media (max-width: 480px) { .netband { margin-left: -16px; margin-right: -16px; border-left-width: 0; border-right-width: 0; border-radius: 0; } }
 @media (pointer: coarse) { .fav { min-width: 44px; min-height: 44px; margin: -8px 0 -8px -8px; padding: 0; } .alert-btn { min-height: 44px; } }

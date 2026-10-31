@@ -1,0 +1,18 @@
+{
+  "_comment": "운영자의 다른 서비스(하단 상호 링크) 공통 데이터. 11개 사이트가 같은 목록을 쓰고 현재 사이트(self)만 뺀다. 순서 = 분야순(여행 → 금융·생활 → 그 밖). 웹(App.tsx)과 정적 페이지 생성(scripts/build-static.mjs)이 같이 읽는다. public/faq.html·privacy.html·terms.html 은 정적 파일이라 같은 목록을 손으로 맞춘다. (이슈 #2)",
+  "utm": { "source": "supgaja", "medium": "footer_network" },
+  "self": "https://supgaja.com",
+  "sites": [
+    { "url": "https://www.airmoa.kr", "name": "에어모아", "desc": "항공권 특가 모음", "icon": "✈️" },
+    { "url": "https://zoommytrip.kr", "name": "내여행 찾아줌", "desc": "마일리지 좌석", "icon": "🧳" },
+    { "url": "https://ittaeda.com", "name": "이때다", "desc": "호텔 날짜별 가격", "icon": "🏨" },
+    { "url": "https://supgaja.com", "name": "숲가자", "desc": "자연휴양림 빈자리", "icon": "🌲" },
+    { "url": "https://etfx.kr", "name": "ETFX", "desc": "ETF 구성종목 분석", "icon": "📊" },
+    { "url": "https://cardmatch.kr", "name": "카드매치", "desc": "카드 추천", "icon": "💳" },
+    { "url": "https://myapgujeong.kr", "name": "내 압구정", "desc": "아파트 실거래", "icon": "🏢" },
+    { "url": "https://auto-insu-compare.vercel.app", "name": "자동차보험 환급 비교", "desc": "보험료 비교", "icon": "🚗" },
+    { "url": "https://www.ipsion.kr", "name": "입시on", "desc": "대입 경쟁률", "icon": "🎓" },
+    { "url": "https://fpl-live-production-34f4.up.railway.app", "name": "FPL Live", "desc": "판타지 프리미어리그", "icon": "⚽" },
+    { "url": "https://ddalkkakrank.kr", "name": "딸깍랭크", "desc": "AI 서비스 랭킹", "icon": "🏆" }
+  ]
+}

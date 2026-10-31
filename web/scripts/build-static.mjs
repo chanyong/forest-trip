@@ -123,18 +123,12 @@ const feed = { site: 'supgaja.com', generatedAt: generatedKST, source: '숲나�
 fs.writeFileSync(path.join(DIST, 'alerts-feed.json'), JSON.stringify(feed));
 
 // ---- 2. 정적 페이지 공통 틀 ----
-const OTHER_SERVICES = [
-  ['딸깍랭크', 'https://ddalkkakrank.kr', 'AI 웹서비스 랭킹'],
-  ['에어모아', 'https://www.airmoa.kr', '항공권 특가 모음'],
-  ['내여행 찾아줌', 'https://zoommytrip.kr', '마일리지 좌석'],
-  ['이때다', 'https://ittaeda.com', '호텔 날짜별 가격'],
-  ['ETFX', 'https://etfx.kr', 'ETF 구성종목 분석'],
-  ['카드매치', 'https://cardmatch.kr', '카드 추천'],
-  ['내 압구정', 'https://myapgujeong.kr', '아파트 실거래'],
-  ['입시on', 'https://www.ipsion.kr', '대입 경쟁률'],
-  ['자동차보험 환급 비교', 'https://auto-insu-compare.vercel.app', '자동차보험 환급'],
-  ['FPL Live', 'https://fpl-live-production-34f4.up.railway.app', '판타지 프리미어리그'],
-];
+// 운영자의 다른 서비스(공통 데이터: src/lib/network.json, 웹과 같이 읽는다. 이슈 #2)
+const NETWORK = JSON.parse(fs.readFileSync(path.join(WEB, 'src/lib/network.json'), 'utf8'));
+const networkBand = `<div class="netwrap"><nav class="netband" aria-label="운영자의 다른 서비스"><div class="netband-in"><h2>운영자의 다른 서비스</h2><ul>${NETWORK.sites
+  .filter((s) => s.url !== NETWORK.self)
+  .map((s) => `<li><a href="${s.url}/?utm_source=${NETWORK.utm.source}&amp;utm_medium=${NETWORK.utm.medium}" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">${s.icon}</span><span class="nb-t"><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></span></a></li>`)
+  .join('')}</ul></div></nav></div>`;
 const CSS = `
 :root{--bg:#f6f5f0;--surface:#fff;--surface-2:#f0efe8;--line:#e2e0d6;--line-strong:#cfccbf;--ink:#1d2420;--ink-2:#4b5650;--ink-3:#646e68;--brand:#1f5f3f;--brand-soft:#e3efe6;--open:#1f7a4a;--new:#9a4508;--new-soft:#fdf0e3;--rest:#c0392b;color-scheme:light dark}
 @media (prefers-color-scheme:dark){:root:not([data-theme='light']){--bg:#121614;--surface:#1a201c;--surface-2:#222a25;--line:#2f3933;--line-strong:#46534b;--ink:#e7ece8;--ink-2:#b4bfb8;--ink-3:#939f98;--brand:#7cc79c;--brand-soft:#1f3328;--open:#7cc79c;--new:#f2a65a;--new-soft:#3a2a1a;--rest:#ff8a7a}}
@@ -183,8 +177,23 @@ ul.flist a{font-weight:700;text-decoration:none;display:inline-block;min-height:
 footer{max-width:900px;margin:0 auto;padding:24px 16px 96px;border-top:1px solid var(--line);font-size:.82rem;color:var(--ink-3)}
 footer nav{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 0}
 footer nav a{color:var(--ink-2);display:inline-block;min-height:24px}
-.others{margin-top:12px}
-.others b{display:block;color:var(--ink-2);margin-bottom:4px}
+.netwrap{max-width:900px;margin:32px auto 24px;padding:0 16px}
+.netband { margin: 0; padding: 24px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); font-size: 14px; word-break: keep-all; overflow-wrap: break-word; }
+.netband-in { padding: 0 16px; }
+.netband h2 { margin: 0 0 16px; font-size: 18px; font-weight: 700; line-height: 1.4; color: var(--ink); }
+.netband ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.netband ul a { display: flex; height: 100%; box-sizing: border-box; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--ink); text-decoration: none; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.netband ul a:hover { transform: translateY(-2px); border-color: var(--brand); box-shadow: 0 4px 10px rgba(0, 0, 0, .12); }
+.netband ul a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.netband .nb-i { width: 32px; flex-shrink: 0; text-align: center; font-size: 24px; line-height: 1; }
+.netband .nb-t { min-width: 0; }
+.netband .nb-t b { margin: 0; display: block; font-size: 16px; font-weight: 700; line-height: 1.375; color: var(--ink); }
+.netband .nb-t span { display: block; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+@media (min-width: 640px) { .netband ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .netband ul { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .netband ul a { transition: none; } .netband ul a:hover { transform: none; } }
+@media (max-width: 480px) { .netwrap { padding: 0; } .netband { border-left-width: 0; border-right-width: 0; border-radius: 0; } }
 @media (max-width:600px){h1{font-size:1.25rem}th,td{padding:7px 8px}.hide-sm{display:none}}
 `;
 const GA = `<script async src="https://www.googletagmanager.com/gtag/js?id=G-7W5GR0VK33"></script>
@@ -244,10 +253,10 @@ ${ALERT_JS}
 <main>
 ${body}
 </main>
+${networkBand}
 <footer>
   <p>숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 약 3시간마다 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 실제 예약 가능 여부는 수집 이후 바뀌었을 수 있으니 예약·결제는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요.</p>
   <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a></nav>
-  <div class="others"><b>운영자의 다른 서비스</b><nav aria-label="운영자의 다른 서비스">${OTHER_SERVICES.map(([n, u, d]) => `<a href="${u}" target="_blank" rel="noopener" title="${esc(d)}">${esc(n)}</a>`).join('')}</nav></div>
 </footer>
 <script src="https://ddalkkakrank.kr/feedback.js" defer data-color="#0b6e4f"></script>
 </body>

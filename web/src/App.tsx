@@ -10,6 +10,7 @@ import { Summary } from './components/Summary';
 import { TableView } from './components/TableView';
 import { CalendarView } from './components/CalendarView';
 import { GridView } from './components/GridView';
+import network from './lib/network.json';
 
 // 지도 라이브러리(maplibre)는 필요할 때만 불러온다
 const MapView = lazy(() => import('./components/MapView').then((m) => ({ default: m.MapView })));
@@ -284,6 +285,24 @@ export default function App() {
           </>
         )}
         <footer>
+          <nav className="netband" aria-label="운영자의 다른 서비스">
+            <div className="netband-in">
+              <h2>운영자의 다른 서비스</h2>
+              <ul>
+                {network.sites.filter((s) => s.url !== network.self).map((s) => (
+                  <li key={s.url}>
+                    <a href={`${s.url}/?utm_source=${network.utm.source}&utm_medium=${network.utm.medium}`} target="_blank" rel="noopener">
+                      <span className="nb-i" aria-hidden="true">{s.icon}</span>
+                      <span className="nb-t">
+                        <b>{s.name}</b>
+                        <span>{s.desc}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
           <p>
             숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 주기적으로 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다.
             국립자연휴양림관리소 및 각 지자체와 제휴하지 않았습니다.
@@ -307,21 +326,6 @@ export default function App() {
             <a href="https://github.com/chanyong/forest-trip" target="_blank" rel="noreferrer">소스 코드</a>
             <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>
           </nav>
-          <div className="others">
-            <b>운영자의 다른 서비스</b>
-            <nav className="links" aria-label="운영자의 다른 서비스">
-              <a href="https://ddalkkakrank.kr" target="_blank" rel="noopener">딸깍랭크 <small>AI 웹서비스 랭킹</small></a>
-              <a href="https://www.airmoa.kr" target="_blank" rel="noopener">에어모아 <small>항공권 특가 모음</small></a>
-              <a href="https://zoommytrip.kr" target="_blank" rel="noopener">내여행 찾아줌 <small>마일리지 좌석</small></a>
-              <a href="https://ittaeda.com" target="_blank" rel="noopener">이때다 <small>호텔 날짜별 가격</small></a>
-              <a href="https://etfx.kr" target="_blank" rel="noopener">ETFX <small>ETF 구성종목 분석</small></a>
-              <a href="https://cardmatch.kr" target="_blank" rel="noopener">카드매치 <small>카드 추천</small></a>
-              <a href="https://myapgujeong.kr" target="_blank" rel="noopener">내 압구정 <small>아파트 실거래</small></a>
-              <a href="https://www.ipsion.kr" target="_blank" rel="noopener">입시on <small>대입 경쟁률</small></a>
-              <a href="https://auto-insu-compare.vercel.app" target="_blank" rel="noopener">자동차보험 환급 비교</a>
-              <a href="https://fpl-live-production-34f4.up.railway.app" target="_blank" rel="noopener">FPL Live</a>
-            </nav>
-          </div>
         </footer>
       </main>
 
