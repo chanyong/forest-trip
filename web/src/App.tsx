@@ -11,6 +11,7 @@ import { TableView } from './components/TableView';
 import { CalendarView } from './components/CalendarView';
 import { GridView } from './components/GridView';
 import network from './lib/network.json';
+import { networkLinks } from './lib/network.mjs';
 
 // 지도 라이브러리(maplibre)는 필요할 때만 불러온다
 const MapView = lazy(() => import('./components/MapView').then((m) => ({ default: m.MapView })));
@@ -289,9 +290,9 @@ export default function App() {
             <div className="netband-in">
               <h2>운영자의 다른 서비스</h2>
               <ul>
-                {network.sites.filter((s) => s.url !== network.self).map((s) => (
+                {networkLinks(network).map((s) => (
                   <li key={s.url}>
-                    <a href={`${s.url}/?utm_source=${network.utm.source}&utm_medium=${network.utm.medium}`} target="_blank" rel="noopener">
+                    <a href={s.href} target="_blank" rel="noopener">
                       <span className="nb-i" aria-hidden="true">{s.icon}</span>
                       <span className="nb-t">
                         <b>{s.name}</b>

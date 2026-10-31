@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { policyInfo } from '../src/lib/policy.mjs';
+import { networkLinks } from '../src/lib/network.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(WEB, 'dist');
@@ -125,9 +126,8 @@ fs.writeFileSync(path.join(DIST, 'alerts-feed.json'), JSON.stringify(feed));
 // ---- 2. 정적 페이지 공통 틀 ----
 // 운영자의 다른 서비스(공통 데이터: src/lib/network.json, 웹과 같이 읽는다. 이슈 #2)
 const NETWORK = JSON.parse(fs.readFileSync(path.join(WEB, 'src/lib/network.json'), 'utf8'));
-const networkBand = `<div class="netwrap"><nav class="netband" aria-label="운영자의 다른 서비스"><div class="netband-in"><h2>운영자의 다른 서비스</h2><ul>${NETWORK.sites
-  .filter((s) => s.url !== NETWORK.self)
-  .map((s) => `<li><a href="${s.url}/?utm_source=${NETWORK.utm.source}&amp;utm_medium=${NETWORK.utm.medium}" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">${s.icon}</span><span class="nb-t"><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></span></a></li>`)
+const networkBand = `<div class="netwrap"><nav class="netband" aria-label="운영자의 다른 서비스"><div class="netband-in"><h2>운영자의 다른 서비스</h2><ul>${networkLinks(NETWORK)
+  .map((s) => `<li><a href="${esc(s.href)}" target="_blank" rel="noopener"><span class="nb-i" aria-hidden="true">${s.icon}</span><span class="nb-t"><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></span></a></li>`)
   .join('')}</ul></div></nav></div>`;
 const CSS = `
 :root{--bg:#f6f5f0;--surface:#fff;--surface-2:#f0efe8;--line:#e2e0d6;--line-strong:#cfccbf;--ink:#1d2420;--ink-2:#4b5650;--ink-3:#646e68;--brand:#1f5f3f;--brand-soft:#e3efe6;--open:#1f7a4a;--new:#9a4508;--new-soft:#fdf0e3;--rest:#c0392b;color-scheme:light dark}
