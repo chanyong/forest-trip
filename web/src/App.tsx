@@ -317,14 +317,15 @@ export default function App() {
             <b>개인정보 처리 안내</b> · 회원가입·로그인이 없습니다. 테마와 내 휴양림(즐겨찾기)은 이 브라우저에만 저장되고, '내 위치'는 브라우저 안에서 거리 계산에만 씁니다.
             방문 통계(Google Analytics 쿠키)와 빈자리 알림 신청 때 받는 이메일 등 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 보세요.
           </p>
+          <p>
+            <b>문의·수집 중단 요청</b> · 화면 아래 '의견·질문' 버튼으로 알려 주세요.
+          </p>
           <nav className="links" aria-label="사이트 링크">
             <a href="/forest/">휴양림별 빈자리</a>
             <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a>
             <a href="/faq.html">자주 묻는 질문</a>
             <a href="/privacy">개인정보처리방침</a>
             <a href="/terms">이용약관</a>
-            <a href="https://github.com/chanyong/forest-trip/issues" target="_blank" rel="noreferrer">문의·수집 중단 요청</a>
-            <a href="https://github.com/chanyong/forest-trip" target="_blank" rel="noreferrer">소스 코드</a>
             <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>
           </nav>
         </footer>
