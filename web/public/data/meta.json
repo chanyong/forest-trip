@@ -1,17 +1,17 @@
 {
- "generatedAt": "2026-11-01T23:06:27.805Z",
+ "generatedAt": "2026-11-02T02:50:32.249Z",
  "start": "20261102",
  "end": "20270131",
- "durationSec": 1392,
+ "durationSec": 1656,
  "requests": 2927,
  "ok": 2927,
  "fail": 0,
  "totals": {
   "forests": 185,
   "goods": 7464,
-  "available": 111824
+  "available": 112375
  },
- "newlyOpened": 76,
+ "newlyOpened": 387,
  "unknownCodes": {
   "WEEKEND_DRLTS": 2210,
   "NOTOPEN": 19
