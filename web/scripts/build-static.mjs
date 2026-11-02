@@ -213,7 +213,7 @@ const alertAttr = (o) => esc(JSON.stringify({ site: 'supgaja.com', ...o }));
 function page({ urlPath, title, description, body, jsonld = [] }) {
   const url = SITE + urlPath;
   const ld = [
-    { '@context': 'https://schema.org', '@type': 'Organization', name: '숲가자', url: SITE + '/', logo: SITE + '/icon-512.png', founder: { '@type': 'Person', name: 'chanyong' }, email: 'cyjung@gmail.com' },
+    { '@context': 'https://schema.org', '@type': 'Organization', name: '숲가자', url: SITE + '/', logo: SITE + '/icon-512.png', founder: { '@type': 'Person', name: 'chanyong' }, email: '1bangkr.info@gmail.com' },
     ...jsonld,
   ];
   return `<!doctype html>
