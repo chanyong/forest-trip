@@ -12,6 +12,7 @@ import { CalendarView } from './components/CalendarView';
 import { GridView } from './components/GridView';
 import network from './lib/network.json';
 import { networkLinks } from './lib/network.mjs';
+import { searchStep, trackSearch } from './lib/track.mjs';
 
 // 지도 라이브러리(maplibre)는 필요할 때만 불러온다
 const MapView = lazy(() => import('./components/MapView').then((m) => ({ default: m.MapView })));
@@ -124,6 +125,19 @@ export default function App() {
     () => (status && filters ? compute(status, filters, origin, { favs, fresh: fresh?.fresh, latestAt: fresh?.latestAt }) : []),
     [status, filters, origin, favs, fresh],
   );
+
+  // GA4 search: 검색어 입력이 1.5초 멈추면 한 번 보낸다(주소로 들어온 처음 검색어는 사용자가 실행한 검색이 아니라 뺀다)
+  const q = filters?.q ?? '';
+  const ready = !!filters;
+  const skipQ = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (!ready) return;
+    const step = searchStep(skipQ.current, q);
+    skipQ.current = step.skip;
+    if (!step.send) return;
+    const t = setTimeout(() => trackSearch(q, results.length), 1500);
+    return () => clearTimeout(t);
+  }, [ready, q, results.length]);
 
   // 빈자리 이메일 알림: 지금 조건으로 공통 알림 창을 연다. 알림 모듈이 아직 없으면 안내만 보여 준다
   const [notice, setNotice] = useState('');
@@ -310,7 +324,7 @@ export default function App() {
           </p>
           <p>
             실제 예약 가능 여부는 수집 시점 이후 바뀌었을 수 있습니다. 예약·결제·취소는 반드시{' '}
-            <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>에서 진행하세요.
+            <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer" data-ga-item="site">숲나들e</a>에서 진행하세요.
             공휴일은 주말 판단에만 쓰이며 연 1회 갱신합니다.
           </p>
           <p>
@@ -326,7 +340,7 @@ export default function App() {
             <a href="/faq.html">자주 묻는 질문</a>
             <a href="/privacy">개인정보처리방침</a>
             <a href="/terms">이용약관</a>
-            <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer">숲나들e</a>
+            <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer" data-ga-item="site">숲나들e</a>
           </nav>
         </footer>
       </main>

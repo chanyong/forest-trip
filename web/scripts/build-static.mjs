@@ -199,7 +199,8 @@ footer nav a{color:var(--ink-2);display:inline-block;min-height:24px}
 @media (max-width:600px){h1{font-size:1.25rem}th,td{padding:7px 8px}.hide-sm{display:none}}
 `;
 const GA = `<script async src="https://www.googletagmanager.com/gtag/js?id=G-7W5GR0VK33"></script>
-<script>if(location.hostname==='supgaja.com'){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7W5GR0VK33');}</script>`;
+<script>if(location.hostname==='supgaja.com'){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7W5GR0VK33');}</script>
+<script src="/track.js" defer></script>`; // GA4 전환 이벤트(예약·외부 링크 클릭, 알림 신청, 의견 버튼), 이슈 #11
 // 알림 버튼: 중앙 alerts.js(딸깍랭크)가 아직 없거나 못 불러와도 안내만 띄운다
 // 알림 모듈(alerts.js)은 버튼을 처음 누를 때 불러온다(src/lib/alerts.ts 와 같은 방식)
 const ALERT_JS = `<script>
@@ -330,7 +331,7 @@ ${stampLine}
 <div class="actions">
   <a class="btn primary" href="/?forest=${encodeURIComponent(f.id)}">객실별 날짜 자세히 보기</a>
   <button type="button" class="btn alert" data-alert="${alertAttr({ label: `${f.name} 빈자리`, filters: [{ key: 'forestId', op: 'eq', value: f.id }] })}">🔔 빈자리 알림 받기</button>
-  <a class="btn" href="https://www.foresttrip.go.kr/rep/or/sssn/monthRsrvtStatus.do?hmpgId=FRIP&amp;menuId=001004" target="_blank" rel="noopener">숲나들e에서 예약 ↗</a>
+  <a class="btn" href="https://www.foresttrip.go.kr/rep/or/sssn/monthRsrvtStatus.do?hmpgId=FRIP&amp;menuId=001004" target="_blank" rel="noopener" data-ga-item="${esc(f.name)}">숲나들e에서 예약 ↗</a>
   ${f.url ? `<a class="btn" href="${esc(f.url)}" target="_blank" rel="noopener">휴양림 홈페이지 ↗</a>` : ''}
 </div>
 ${pol ? `<h2>예약은 언제 열리나요?</h2><div class="note">${pol.html}</div>` : ''}

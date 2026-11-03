@@ -106,7 +106,7 @@ export function ForestDrawer({ forest: f, status, filters, onClose, fav, toggleF
         </div>
         <div className="drawer-bd">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <a className="btn primary" href={RESERVE_URL} target="_blank" rel="noreferrer">숲나들e에서 예약하기 <small>(로그인 필요)</small> ↗</a>
+            <a className="btn primary" href={RESERVE_URL} target="_blank" rel="noreferrer" data-ga-item={f.name}>숲나들e에서 예약하기 <small>(로그인 필요)</small> ↗</a>
             {f.url && <a className="btn" href={f.url} target="_blank" rel="noreferrer">휴양림 홈페이지 ↗</a>}
             <a className="btn" href={naverPlaceUrl(f)} target="_blank" rel="noreferrer">네이버 리뷰·지도 ↗</a>
             <a className="btn" href={`https://map.kakao.com/?q=${encodeURIComponent(f.name)}`} target="_blank" rel="noreferrer">카카오맵</a>
