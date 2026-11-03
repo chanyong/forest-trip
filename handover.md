@@ -82,6 +82,7 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | `components/Summary.tsx` | 상단 요약 카드와 '최근 새로 열린 자리' 카드 |
 | `components/Price.tsx`, `Rate.tsx`, `Reviews.tsx` | 요금 표시(숙소 6.9만 · 야영 3만), 예약률 막대, 네이버 리뷰 배지 |
 | `index.html` | 메타·OG·JSON-LD, status.json 조기 요청(`window.__statusReq`), 글꼴 비동기 로드, GA4(supgaja.com 호스트에서만 동작) |
+| `public/track.js`, `lib/track.mjs` | GA4 전환 이벤트(이슈 #11). track.js는 GA를 쓰는 모든 페이지(index·faq·privacy·terms·정적 생성 페이지)에서 불러와 `affiliate_click`(숲나들e 예약 링크, partner=foresttrip, item=휴양림 이름 `data-ga-item`), `outbound_click`(그 밖 외부 링크), `feedback_open`(공통 의견 버튼), `alert_signup`(alerts.js가 보내는 `alert_subscribe`를 받아 함께 보냄)을 보낸다. 검색 `search`(search_term은 이메일·전화번호를 지우고 40자까지, results)는 앱이 입력이 1.5초 멈춘 뒤 보낸다. 검사 `scripts/track.test.mjs` |
 | `public/` | 404.html, og-image.png(1200×630, 숲가자 supgaja.com), 아이콘, manifest, robots.txt, sitemap.xml |
 | `vercel.json` | 보안 헤더, 캐시, www·vercel.app → supgaja.com 301, `/faq`→`/faq.html` 301, `/privacy`·`/terms`·`/forest/:id`·`/vacancy/...` rewrites |
 | `public/privacy.html`, `terms.html` | 개인정보처리방침(GA4·빈자리 알림 이메일·의견함·브라우저 저장)·이용약관. 주소는 `/privacy`, `/terms` |
@@ -126,6 +127,7 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | 11-03 | PR #7 | 문의 이메일을 `1bangkr.info@gmail.com`으로 통일(이슈 #6, 대표 결정 2026-11-02): 처리방침·약관 mailto, JSON-LD email(`index.html`, `build-static.mjs`). `scripts/contact-email.test.mjs`가 화면에 나가는 파일의 이메일이 이 주소뿐인지 검사한다. 1장 '구글 계정'(cyjung@gmail.com)은 로그인 계정이라 그대로 |
 | 11-03 | (이번 PR) | `/llms.txt` 추가(이슈 #1, SITE_RULES 1-7): 빌드 마지막 단계(`build-static.mjs` 8절)가 수집 데이터로 매번 새로 만든다. 마지막 갱신 시각·수집 범위·예약가능 건수·지역별 이번/다음 주말 빈자리 휴양림 수를 담는다 |
 | 11-03 | (이번 PR) | 하단 '운영자의 다른 서비스' 순서를 SITE_RULES 1-4 표준으로(이슈 #9, ops-hq#3, 기준표 ddalkkak-rank#12 11-03 댓글): 딸깍랭크 · 에어모아 · 내여행 찾아줌 · 이때다 · (숲가자) · ETFX · 카드매치 · 내 압구정 · 입시on · 자동차보험 환급 비교 · FPL Live. `network.json`과 `public/faq·privacy·terms.html` 순서만 바꿈(주소·설명·UTM 그대로) |
+| 11-03 | (이번 PR) | GA4 전환 이벤트(이슈 #11, 수익화 보고서 v2): `affiliate_click`·`alert_signup`·`search`·`outbound_click`·`feedback_open`. 기존 gtag만 쓰고 새 추적 도구는 없음. 처리방침 방문 통계 항목에 이용 기록 추가, 시행일 2026-11-03. GA4 관리 화면의 '핵심 이벤트' 지정은 관제 창 몫 |
 
 ### 가격순 정렬 규칙 (사용자와 합의)
 - 숙소와 야영장 요금을 섞어 비교하지 않는다.
