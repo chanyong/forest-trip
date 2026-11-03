@@ -12,6 +12,7 @@ import { CalendarView } from './components/CalendarView';
 import { GridView } from './components/GridView';
 import network from './lib/network.json';
 import { networkLinks } from './lib/network.mjs';
+import { trackSearch } from './lib/track.mjs';
 
 // 지도 라이브러리(maplibre)는 필요할 때만 불러온다
 const MapView = lazy(() => import('./components/MapView').then((m) => ({ default: m.MapView })));
@@ -124,6 +125,18 @@ export default function App() {
     () => (status && filters ? compute(status, filters, origin, { favs, fresh: fresh?.fresh, latestAt: fresh?.latestAt }) : []),
     [status, filters, origin, favs, fresh],
   );
+
+  // GA4 search: 검색어 입력이 1.5초 멈추면 한 번 보낸다(주소로 들어온 처음 검색어는 사용자가 실행한 검색이 아니라 뺀다)
+  const q = filters?.q ?? '';
+  const ready = !!filters;
+  const firstQ = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready) return;
+    if (firstQ.current === null) { firstQ.current = q; return; }
+    if (q === firstQ.current) return;
+    const t = setTimeout(() => trackSearch(q, results.length), 1500);
+    return () => clearTimeout(t);
+  }, [ready, q, results.length]);
 
   // 빈자리 이메일 알림: 지금 조건으로 공통 알림 창을 연다. 알림 모듈이 아직 없으면 안내만 보여 준다
   const [notice, setNotice] = useState('');
