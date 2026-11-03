@@ -5,6 +5,8 @@
  *  - feedback_open: 공통 '의견·질문 남기기' 버튼(ddalkkakrank.kr/feedback.js, #site-feedback 안 .open-btn)
  *  - alert_signup {method, site}: 공통 알림 모듈(alerts.js)이 신청 완료 때 보내는 alert_subscribe 를 받아 함께 보낸다
  * 검색(search)은 앱(src/lib/track.mjs)에서 보낸다. 검사: scripts/track.test.mjs
+ * 주소의 검색어 매개변수(q)는 GA 로 보내지 않는다(이슈 #11 대표 결정 A): page_location 을 q 뺀 주소로 set 하고
+ * 주소가 바뀔 때(pushState·replaceState·popstate)마다 다시 set 한다. 첫 page_view 는 index.html 의 config 가 같은 방식으로 뺀다.
  */
 (function () {
   'use strict';
@@ -22,12 +24,57 @@
     return '';
   }
 
+  // 주소에서 q 만 뺀다. 다른 매개변수는 글자 그대로(utm_* 인코딩을 바꾸지 않으려고 문자열로 거른다), 해시도 그대로. 읽을 수 없는 주소는 그대로
+  function pageLocation(href) {
+    try {
+      var u = new URL(href);
+      if (!u.searchParams.has('q')) return href;
+      u.search = u.search.slice(1).split('&').filter(function (p) {
+        var k = p.split('=')[0].replace(/\+/g, ' ');
+        try { k = decodeURIComponent(k); } catch { /* 그대로 비교 */ }
+        return k !== 'q';
+      }).join('&');
+      return u.href;
+    } catch { return href; }
+  }
+
+  var lastLoc = '';
+  function syncLoc(href) {
+    var v = pageLocation(href);
+    if (v === lastLoc || typeof window.gtag !== 'function') return;
+    try { window.gtag('set', { page_location: v }); lastLoc = v; } catch { /* 통계 오류는 무시 */ }
+  }
+  syncLoc(location.href);
+  // 주소가 바뀌기 전에 새 주소로 set 해 두고(향상된 측정의 기록 기반 page_view 가 먼저 읽도록), 끝나면 실제 주소로 맞춘다
+  ['pushState', 'replaceState'].forEach(function (m) {
+    var orig = window.history && window.history[m];
+    if (typeof orig !== 'function') return;
+    window.history[m] = function (state, title, url) {
+      if (url != null) { try { syncLoc(new URL(String(url), location.href).href); } catch { /* 실제 주소로 아래에서 맞춤 */ } }
+      try { return orig.apply(this, arguments); } finally { syncLoc(location.href); }
+    };
+  });
+  window.addEventListener('popstate', function () { syncLoc(location.href); }, true);
+
+  // event 에 page_location 이 없고 지금 주소에 q 가 있으면 q 뺀 주소를 넣는다(alerts.js·앱 등 다른 모듈 이벤트까지)
+  function withLoc(params) {
+    var v = pageLocation(location.href);
+    if (v === location.href || (params && params.page_location !== undefined)) return params;
+    var o = {};
+    for (var k in params || {}) o[k] = params[k];
+    o.page_location = v;
+    return o;
+  }
+
   // 공통 알림 모듈의 신청 완료 이벤트(alert_subscribe)를 이 사이트의 핵심 이벤트 이름(alert_signup)으로도 보낸다
   var g = window.gtag;
   if (typeof g === 'function' && !g.__sup) {
     var wrapped = function (cmd, name, params) {
-      var r = g.apply(this, arguments);
-      if (cmd === 'event' && name === 'alert_subscribe') g('event', 'alert_signup', { method: 'email', site: (params && params.site) || location.hostname });
+      var args = Array.prototype.slice.call(arguments);
+      var p = cmd === 'event' ? withLoc(params) : params;
+      if (p !== params) args[2] = p;
+      var r = g.apply(this, args);
+      if (cmd === 'event' && name === 'alert_subscribe') g('event', 'alert_signup', withLoc({ method: 'email', site: (params && params.site) || location.hostname }));
       return r;
     };
     wrapped.__sup = true;

@@ -44,7 +44,19 @@
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { dataLayer.push(arguments); };
         gtag('js', new Date());
-        gtag('config', 'G-7W5GR0VK33');
+        // 주소의 검색어(q)는 GA 로 보내지 않는다(이슈 #11). public/track.js 의 pageLocation 과 같은 처리(scripts/track.test.mjs 가 둘을 비교)
+        gtag('config', 'G-7W5GR0VK33', { page_location: (function (h) {
+          try {
+            var u = new URL(h);
+            if (!u.searchParams.has('q')) return h;
+            u.search = u.search.slice(1).split('&').filter(function (p) {
+              var k = p.split('=')[0].replace(/\+/g, ' ');
+              try { k = decodeURIComponent(k); } catch (e) { /* 그대로 비교 */ }
+              return k !== 'q';
+            }).join('&');
+            return u.href;
+          } catch (e) { return h; }
+        })(location.href) });
       }
     </script>
     <!-- GA4 전환 이벤트(예약·외부 링크 클릭, 알림 신청, 의견 버튼). 검색은 src/lib/track.mjs -->
