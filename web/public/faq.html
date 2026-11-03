@@ -5,10 +5,12 @@
 <!-- Google tag (gtag.js) - index.html 과 같은 ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-7W5GR0VK33"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-7W5GR0VK33');
+  if (location.hostname === 'supgaja.com') {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-7W5GR0VK33');
+  }
 </script>
 <script src="/track.js" defer></script>
 <!--FAQ_JSONLD-->
@@ -219,7 +221,7 @@
     <h2>개인정보·보안</h2>
     <div class="list">
       <details class="item"><summary>제 정보를 수집하나요?</summary><div class="a">
-        <p>회원가입이 없어 이름·연락처 같은 개인정보를 받지 않습니다. 빈자리 이메일 알림을 신청한 경우에만 이메일 주소와 알림 조건을 받고, 해지하면 지웁니다. 방문 통계를 위해 Google Analytics가 쿠키로 익명 이용 정보(방문 페이지, 기기·브라우저 종류, 대략적 지역)를 모읍니다. 브라우저에서 쿠키를 막으면 수집되지 않습니다.</p>
+        <p>회원가입이 없어 이름·연락처 같은 개인정보를 받지 않습니다. 빈자리 이메일 알림을 신청한 경우에만 이메일 주소와 알림 조건을 받고, 해지하면 지웁니다. 방문 통계를 위해 Google Analytics가 쿠키로 익명 이용 정보(방문 페이지, 기기·브라우저 종류, 대략적 지역, 링크 클릭·검색어 같은 이용 기록)를 모읍니다. 브라우저에서 쿠키를 막으면 수집되지 않습니다.</p>
       </div></details>
       <details class="item"><summary>‘내 위치’를 누르면 위치가 저장되나요?</summary><div class="a">
         <p>아니요. 위치는 브라우저 안에서 거리를 계산하는 데만 쓰고 밖으로 보내지 않습니다.</p>
