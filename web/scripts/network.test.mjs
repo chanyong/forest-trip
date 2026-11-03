@@ -10,9 +10,9 @@ const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const network = JSON.parse(fs.readFileSync(path.join(WEB, 'src/lib/network.json'), 'utf8'));
 const links = networkLinks(network);
 
-test('숲가자를 뺀 10곳을 공통 사양 순서(여행 → 금융·생활 → 그 밖)로 낸다', () => {
+test('숲가자를 뺀 10곳을 SITE_RULES 표준 순서로 낸다 (이슈 #9)', () => {
   assert.deepEqual(links.map((l) => l.name), [
-    '에어모아', '내여행 찾아줌', '이때다', 'ETFX', '카드매치', '내 압구정', '자동차보험 환급 비교', '입시on', 'FPL Live', '딸깍랭크',
+    '딸깍랭크', '에어모아', '내여행 찾아줌', '이때다', 'ETFX', '카드매치', '내 압구정', '입시on', '자동차보험 환급 비교', 'FPL Live',
   ]);
 });
 
