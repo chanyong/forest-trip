@@ -6,7 +6,8 @@
  *  - alert_signup {method, site}: 공통 알림 모듈(alerts.js)이 신청 완료 때 보내는 alert_subscribe 를 받아 함께 보낸다
  * 검색(search)은 앱(src/lib/track.mjs)에서 보낸다. 검사: scripts/track.test.mjs
  * 주소의 검색어 매개변수(q)는 GA 로 보내지 않는다(이슈 #11 대표 결정 A): page_location 을 q 뺀 주소로 set 하고
- * 주소가 바뀔 때(pushState·replaceState·popstate)마다 다시 set 한다. 첫 page_view 는 index.html 의 config 가 같은 방식으로 뺀다.
+ * 주소가 바뀔 때(pushState·replaceState·popstate)마다 다시 set 한다. 첫 page_view 는 index.html 이 config 앞에서 같은 방식으로 set 한다
+ * (config 매개변수로 넘기면 이후 hit 에 첫 주소가 고정되므로 쓰지 않는다). 사이트 안 이동의 referrer 는 index.html 의 referrer meta(strict-origin)가 막는다.
  */
 (function () {
   'use strict';

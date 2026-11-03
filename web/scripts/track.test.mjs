@@ -367,20 +367,30 @@ test('gtag 가 없어도 history 는 그대로 동작하고, 두 번 불러와�
   assert.deepEqual(twice.sets(), ['https://supgaja.com/', 'https://supgaja.com/?people=2']);
 });
 
-// Value: protects=앱 첫 page_view(index.html 의 config)부터 q 가 빠지고, 인라인 처리가 track.js 와 같은 결과; fails_when=config 에 page_location 이 빠지거나 두 처리가 어긋남;
-//   why_new=기존 검사는 config 위치만 봄; seam=none; no_claim=gtag.js 가 config 의 page_location 을 첫 page_view 에 쓰는지(배포 뒤 DebugView)
-test('index.html 의 GA config 가 q 뺀 page_location 으로 첫 page_view 를 보낸다', () => {
+// Value: protects=앱 첫 page_view(index.html 의 config)부터 q 가 빠지고, 인라인 처리가 track.js 와 같은 결과이며, page_location 을 config 매개변수로 고정하지 않음;
+//   fails_when=config 앞 set 이 빠지거나 두 처리가 어긋나거나 config 에 page_location 을 다시 넣음(이후 hit 에 첫 주소가 고정됨);
+//   why_new=기존 검사는 config 위치만 봄; seam=none; no_claim=gtag.js 가 set 값을 첫·이후 page_view 에 쓰는지(배포 뒤 DebugView)
+test('index.html 이 config 앞에서 q 뺀 page_location 을 set 하고, config 에는 page_location 을 넣지 않는다', () => {
   const html = read('index.html');
   const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((s) => s.includes("gtag('config'"));
   assert.ok(inline, 'GA 설정 인라인 스크립트');
-  assert.match(inline, /gtag\('config', 'G-7W5GR0VK33', \{ page_location:/);
   for (const [href, want] of LOC_CASES) {
     const ctx = { URL, location: { hostname: 'supgaja.com', href }, document: { createElement: () => ({}), head: { appendChild() {} } } };
     ctx.window = ctx;
     vm.createContext(ctx);
     vm.runInContext(inline, ctx);
-    const config = [...ctx.dataLayer].map((a) => [...a]).find((a) => a[0] === 'config');
-    assert.equal(config[2].page_location, want, href);
-    assert.deepEqual(load({ href }).sets(), [config[2].page_location], `track.js 와 같은 결과: ${href}`);
+    const calls = [...ctx.dataLayer].map((a) => JSON.parse(JSON.stringify([...a])));
+    const si = calls.findIndex((a) => a[0] === 'set');
+    const ci = calls.findIndex((a) => a[0] === 'config');
+    assert.ok(si >= 0 && ci > si, `config 앞에 set: ${href}`);
+    assert.equal(calls[si][1].page_location, want, href);
+    assert.deepEqual(calls[ci], ['config', 'G-7W5GR0VK33'], `config 에 page_location 없음: ${href}`);
+    assert.deepEqual(load({ href }).sets(), [calls[si][1].page_location], `track.js 와 같은 결과: ${href}`);
   }
+});
+
+// Value: protects=앱에서 검색한 뒤 사이트 안 다른 페이지로 가도 다음 페이지 GA page_referrer(document.referrer)에 원래 검색어가 없음;
+//   fails_when=index.html 의 referrer meta 가 빠지거나 전체 주소를 보내는 정책으로 바뀜; why_new=page_location 검사만 있었음; seam=none; no_claim=브라우저가 meta 정책을 적용하는지(배포 뒤 확인)
+test('index.html 은 referrer 로 출처만 보낸다(strict-origin)', () => {
+  assert.match(read('index.html'), /<meta name="referrer" content="strict-origin" \/>/);
 });
