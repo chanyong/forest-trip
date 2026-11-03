@@ -1,6 +1,6 @@
 /* 숲가자 GA4 전환 이벤트(이슈 #11). 모든 페이지에서 GA 설정 바로 뒤에 불러온다.
  * 새 추적 도구 없이 기존 gtag 만 쓴다. gtag 가 없는 곳(미리보기·로컬)에서는 아무것도 보내지 않는다.
- *  - affiliate_click {partner, item, link_domain}: 외부 예약 링크(숲나들e) 클릭. item 은 가장 가까운 data-ga-item(휴양림 이름), 없으면 'site'
+ *  - affiliate_click {partner, item, link_domain}: 예약 링크(숲나들e, data-ga-item 을 단 링크나 그 안쪽) 클릭. item 은 data-ga-item 값(휴양림 이름 또는 'site')
  *  - outbound_click {link_domain, link_url}: 그 밖의 외부 사이트 이동. link_url 은 쿼리 없이 주소·경로만
  *  - feedback_open: 공통 '의견·질문 남기기' 버튼(ddalkkakrank.kr/feedback.js, #site-feedback 안 .open-btn)
  *  - alert_signup {method, site}: 공통 알림 모듈(alerts.js)이 신청 완료 때 보내는 alert_subscribe 를 받아 함께 보낸다
@@ -34,6 +34,22 @@
     window.gtag = wrapped;
   }
 
+  function linkClick(e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var u;
+    try { u = new URL(a.getAttribute('href'), location.href); } catch { return; }
+    if ((u.protocol !== 'http:' && u.protocol !== 'https:') || u.hostname === location.hostname) return;
+    // 예약 링크로 표시한 것(data-ga-item)만 affiliate_click. 같은 foresttrip.go.kr 이라도 휴양림 홈페이지 링크는 outbound_click
+    var partner = partnerOf(u.hostname);
+    var it = partner ? a.closest('[data-ga-item]') : null;
+    if (it) {
+      send('affiliate_click', { partner: partner, item: it.getAttribute('data-ga-item') || 'site', link_domain: u.hostname });
+    } else {
+      send('outbound_click', { link_domain: u.hostname, link_url: u.origin + u.pathname });
+    }
+  }
+
   document.addEventListener('click', function (e) {
     var path = typeof e.composedPath === 'function' ? e.composedPath() : [];
     for (var i = 0; i < path.length; i++) {
@@ -43,17 +59,8 @@
         return;
       }
     }
-    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-    if (!a) return;
-    var u;
-    try { u = new URL(a.getAttribute('href'), location.href); } catch { return; }
-    if ((u.protocol !== 'http:' && u.protocol !== 'https:') || u.hostname === location.hostname) return;
-    var partner = partnerOf(u.hostname);
-    if (partner) {
-      var it = a.closest('[data-ga-item]');
-      send('affiliate_click', { partner: partner, item: (it && it.getAttribute('data-ga-item')) || 'site', link_domain: u.hostname });
-    } else {
-      send('outbound_click', { link_domain: u.hostname, link_url: u.origin + u.pathname });
-    }
+    linkClick(e);
   }, true);
+  // 가운데 버튼으로 새 탭에 연 링크(click 이 생기지 않는다)도 같은 링크 이벤트로 센다
+  document.addEventListener('auxclick', function (e) { if (e.button === 1) linkClick(e); }, true);
 })();

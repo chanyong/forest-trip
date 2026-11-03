@@ -17,11 +17,20 @@ export function track(name, params = {}) {
   } catch { /* 통계 오류는 무시 */ }
 }
 
-// 검색 실행: 같은 검색어를 연달아 보내지 않는다. 보낸 검색어(정리된 것)를 돌려주고, 안 보냈으면 ''.
+// 앱의 검색어가 바뀔 때마다 부른다. 주소로 들어온 처음 검색어(skip)만 건너뛰고, 사용자가 한 번 바꾸면 그 뒤로는 모두 보낸다.
+// skip: undefined(처음) → 처음 검색어 → null(바뀐 뒤). 다음 skip 과 보낼지(send)를 돌려준다.
+export function searchStep(skip, q) {
+  if (skip === undefined) return { skip: q, send: false };
+  if (skip !== null && q === skip) return { skip, send: false };
+  return { skip: null, send: true };
+}
+
+// 검색 실행: 같은 검색어를 연달아 보내지 않는다(검색어를 비우면 다시 보낸다). 보낸 검색어(정리된 것)를 돌려주고, 안 보냈으면 ''.
 let last = '';
 export function trackSearch(q, results) {
   const term = cleanSearchTerm(q);
-  if (!term || term === last) return '';
+  if (!term) { last = ''; return ''; }
+  if (term === last) return '';
   last = term;
   track('search', { search_term: term, results });
   return term;
