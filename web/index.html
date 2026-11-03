@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>숲가자 · 전국 자연휴양림 예약 빈자리 찾기</title>
+    <!-- 앱 주소의 검색어(?q=)가 사이트 안 다른 페이지로 이동할 때 referrer(GA page_referrer)로 넘어가지 않게 출처만 보낸다(이슈 #11). 외부로는 지금도 출처만 감 -->
+    <meta name="referrer" content="strict-origin" />
     <meta name="naver-site-verification" content="6e2d4dd2361f6ee86d5bdc3cf4656182fa189061" />
     <meta name="description" content="전국 자연휴양림 185곳의 숙소·야영장 예약 빈자리와 취소표를 3시간마다 모아 날짜·지역·인원·주말 요금으로 한 번에 찾습니다. 예약은 숲나들e에서." />
     <link rel="canonical" href="https://supgaja.com/" />
@@ -44,6 +46,20 @@
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { dataLayer.push(arguments); };
         gtag('js', new Date());
+        // 주소의 검색어(q)는 GA 로 보내지 않는다(이슈 #11). public/track.js 의 pageLocation 과 같은 처리(scripts/track.test.mjs 가 둘을 비교).
+        // config 매개변수로 넘기면 이후 모든 hit 에 그 값이 고정돼 track.js 의 set 갱신이 먹지 않으므로, config 앞에서 set 으로 둔다
+        gtag('set', { page_location: (function (h) {
+          try {
+            var u = new URL(h);
+            if (!u.searchParams.has('q')) return h;
+            u.search = u.search.slice(1).split('&').filter(function (p) {
+              var k = p.split('=')[0].replace(/\+/g, ' ');
+              try { k = decodeURIComponent(k); } catch (e) { /* 그대로 비교 */ }
+              return k !== 'q';
+            }).join('&');
+            return u.href;
+          } catch (e) { return h; }
+        })(location.href) });
         gtag('config', 'G-7W5GR0VK33');
       }
     </script>

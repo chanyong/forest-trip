@@ -30,14 +30,26 @@ function el(tag, attrs = {}, parent = null, classes = []) {
   return n;
 }
 
-function load({ gtag = true } = {}) {
+function load({ gtag = true, href = 'https://supgaja.com/forest/0101' } = {}) {
   const sent = [];
   const onClick = []; // 등록된 click 리스너 전부(두 번 불러왔을 때 중복 등록을 잡으려고 모두 부른다)
   const onAux = []; // auxclick(가운데 버튼) 리스너
+  const onPop = []; // window popstate 리스너
+  // 앱이 쓰는 history: 주소를 바꾸고, 불린 this·인수와 그때까지 보낸 hit 수를 남기고, 값을 돌려준다
+  const history = { calls: [] };
+  for (const m of ['pushState', 'replaceState']) {
+    history[m] = function (state, title, url) {
+      history.calls.push({ m, self: this, args: [...arguments], sentBefore: sent.length });
+      if (url != null) ctx.location.href = new URL(url, ctx.location.href).href;
+      return `ret:${m}`;
+    };
+  }
   const ctx = {
     URL,
-    location: { hostname: 'supgaja.com', href: 'https://supgaja.com/forest/0101' },
+    history,
+    location: { hostname: 'supgaja.com', href },
     document: { addEventListener: (type, fn) => { if (type === 'click') onClick.push(fn); if (type === 'auxclick') onAux.push(fn); } },
+    addEventListener: (type, fn) => { if (type === 'popstate') onPop.push(fn); },
   };
   ctx.window = ctx;
   if (gtag) ctx.gtag = function () { sent.push([...arguments]); };
@@ -48,7 +60,9 @@ function load({ gtag = true } = {}) {
   const auxclick = (target, button = 1) => onAux.forEach((fn) => fn({ target, button, composedPath: () => [] }));
   // vm 안에서 만든 객체는 프로토타입이 달라 JSON 으로 옮겨 비교한다
   const events = () => JSON.parse(JSON.stringify(sent.filter((a) => a[0] === 'event').map((a) => [a[1], a[2]])));
-  return { ctx, click, auxclick, events, run };
+  const sets = () => JSON.parse(JSON.stringify(sent.filter((a) => a[0] === 'set').map((a) => a[1].page_location)));
+  const popstate = (url) => { ctx.location.href = url; onPop.forEach((fn) => fn({})); };
+  return { ctx, click, auxclick, events, sets, popstate, run, sent };
 }
 
 // Value: protects=가운데 버튼으로 새 탭에 연 예약·외부 링크도 affiliate_click·outbound_click 으로 셈; fails_when=auxclick 리스너가 빠지거나 오른쪽 버튼까지 셈;
@@ -274,4 +288,109 @@ test('GA 를 쓰는 모든 페이지가 track.js 를 GA 설정 뒤에 불러오�
   //   why_new=기존 행은 서랍·정적 페이지만 봄; seam=none; no_claim=렌더된 DOM(소스 문자열로 대신)
   const appSite = read('src/App.tsx').match(/href="https:\/\/www\.foresttrip\.go\.kr"[^>]*data-ga-item="site"/g) || [];
   assert.equal(appSite.length, 2, 'App.tsx 숲나들e 링크 두 곳에 data-ga-item="site"');
+});
+
+// ── 주소의 검색어(q)를 GA page_location 에서 빼기 (이슈 #11 대표 결정 A) ──
+// [불러올 때 주소, GA 로 보낼 page_location]
+const LOC_CASES = [
+  ['https://supgaja.com/?q=010-1234-5678&utm_source=naver&utm_campaign=a%20b&forest=0101', 'https://supgaja.com/?utm_source=naver&utm_campaign=a%20b&forest=0101'],
+  ['https://supgaja.com/?view=map&q=me%40example.com#top', 'https://supgaja.com/?view=map#top'],
+  ['https://supgaja.com/?q=%EC%9C%A0%EB%AA%85%EC%82%B0', 'https://supgaja.com/'], // q 만 있으면 ? 도 없앤다
+  ['https://supgaja.com/?q', 'https://supgaja.com/'],
+  ['https://supgaja.com/?q=1&sort=price&q=2', 'https://supgaja.com/?sort=price'],
+  ['https://supgaja.com/?%71=x&a=1', 'https://supgaja.com/?a=1'], // 인코딩된 q(%71)도 앱은 q 로 읽는다
+  ['https://supgaja.com/?utm_campaign=a+b&qq=1&q2=3&Q=4', 'https://supgaja.com/?utm_campaign=a+b&qq=1&q2=3&Q=4'], // q 가 아니면 글자 그대로
+  ['https://supgaja.com/forest/0101', 'https://supgaja.com/forest/0101'],
+  ['https://supgaja.com/#q=1', 'https://supgaja.com/#q=1'], // 해시는 매개변수가 아니다
+  ['not a url', 'not a url'], // 읽을 수 없는 주소는 그대로
+];
+
+// Value: protects=GA 로 가는 page_location 에 주소의 원래 검색어(이메일·전화번호가 섞일 수 있음)가 없고 다른 매개변수(utm_*, forest, view)·해시는 글자 그대로;
+//   fails_when=q 를 빼지 않거나 URLSearchParams 로 다시 써서 utm 인코딩이 바뀜; why_new=이전에는 gtag 가 현재 주소를 그대로 붙임; seam=none;
+//   no_claim=실제 gtag.js 가 set 값을 page_view 에 쓰는지(배포 뒤 DebugView)
+test('불러올 때 q 만 뺀 주소로 page_location 을 set 한다', () => {
+  for (const [href, want] of LOC_CASES) assert.deepEqual(load({ href }).sets(), [want], href);
+});
+
+// Value: protects=앱이 replaceState·pushState 로 검색어를 주소에 넣어도 이후 hit 의 page_location 에 q 가 없고, 앱의 history 호출은 this·인수·반환값 그대로;
+//   fails_when=history 를 감싸지 않거나 감싼 함수가 반환값·this 를 잃거나 새 주소 set 이 원래 함수보다 늦음; why_new=history 를 다루는 검사가 없음; seam=none;
+//   no_claim=gtag.js 의 기록 기반 page_view 가 감싸는 순서와 상관없이 set 값을 읽는지
+test('replaceState·pushState·popstate 로 주소가 바뀌면 q 뺀 주소로 다시 set 한다', () => {
+  const { ctx, sets, sent, popstate } = load({ href: 'https://supgaja.com/' });
+  const h = ctx.history;
+  const state = { forest: '0101' };
+  assert.equal(h.replaceState(null, '', '/?q=010-1234-5678&people=2'), 'ret:replaceState');
+  assert.equal(h.pushState(state, '', '/?q=010-1234-5678&people=2&forest=0101'), 'ret:pushState');
+  assert.equal(h.calls[0].self, h);
+  assert.deepEqual(h.calls[1].args, [state, '', '/?q=010-1234-5678&people=2&forest=0101']);
+  assert.equal(h.calls[1].args[0], state);
+  // 원래 함수가 불릴 때는 이미 새 주소로 set 돼 있다
+  assert.deepEqual(JSON.parse(JSON.stringify(sent[h.calls[1].sentBefore - 1])), ['set', { page_location: 'https://supgaja.com/?people=2&forest=0101' }]);
+  h.replaceState(null, '', '/?q=가평&people=2&forest=0101'); // 검색어만 바뀌면 다시 보내지 않는다
+  h.replaceState(null, ''); // 주소 인수가 없으면 바뀐 것 없음
+  popstate('https://supgaja.com/?view=map');
+  assert.deepEqual(sets(), ['https://supgaja.com/', 'https://supgaja.com/?people=2', 'https://supgaja.com/?people=2&forest=0101', 'https://supgaja.com/?view=map']);
+  assert.equal(JSON.stringify(sent).includes('010-1234-5678'), false);
+});
+
+// Value: protects=다른 모듈(alerts.js·앱 search)이 보내는 event 에도 q 없는 page_location 이 붙고, 직접 넘긴 page_location 은 그대로, q 가 없으면 params 를 건드리지 않음;
+//   fails_when=래퍼가 page_location 을 넣지 않거나 덮어씀; why_new=래퍼는 alert_subscribe 만 다룸; seam=none; no_claim=alerts.js 의 실제 호출
+test('래퍼가 event 에 q 뺀 page_location 을 넣고, 이미 있으면 덮어쓰지 않는다', () => {
+  const { ctx, events } = load({ href: 'https://supgaja.com/?q=me%40example.com&utm_source=x' });
+  ctx.window.gtag('event', 'search', { search_term: '유명산' });
+  ctx.window.gtag('event', 'alert_subscribe', { site: 'supgaja.com' });
+  ctx.window.gtag('event', 'x', { page_location: 'https://supgaja.com/given' });
+  ctx.window.gtag('event', 'y');
+  ctx.location.href = 'https://supgaja.com/?utm_source=x';
+  ctx.window.gtag('event', 'z', { a: 1 });
+  const loc = 'https://supgaja.com/?utm_source=x';
+  assert.deepEqual(events(), [
+    ['search', { search_term: '유명산', page_location: loc }],
+    ['alert_subscribe', { site: 'supgaja.com', page_location: loc }],
+    ['alert_signup', { method: 'email', site: 'supgaja.com', page_location: loc }],
+    ['x', { page_location: 'https://supgaja.com/given' }],
+    ['y', { page_location: loc }],
+    ['z', { a: 1 }],
+  ]);
+});
+
+// Value: protects=gtag 가 없는 곳(미리보기·로컬)에서도 앱의 history 호출이 그대로 동작하고 set 을 보내지 않음, 두 번 불러와도 history 를 두 번 감싸지 않음;
+//   fails_when=syncLoc 의 typeof 검사나 __supTrack 중복 방지가 빠짐; why_new=history 감싸기는 새 동작; seam=none; no_claim=실제 브라우저 history
+test('gtag 가 없어도 history 는 그대로 동작하고, 두 번 불러와도 set 을 한 번만 보낸다', () => {
+  const none = load({ gtag: false, href: 'https://supgaja.com/?q=1' });
+  assert.equal(none.ctx.history.replaceState(null, '', '/?q=2'), 'ret:replaceState');
+  assert.equal(none.ctx.location.href, 'https://supgaja.com/?q=2');
+  assert.deepEqual(none.sets(), []);
+  const twice = load({ href: 'https://supgaja.com/?q=1' });
+  twice.run();
+  twice.ctx.history.replaceState(null, '', '/?q=2&people=2');
+  assert.deepEqual(twice.sets(), ['https://supgaja.com/', 'https://supgaja.com/?people=2']);
+});
+
+// Value: protects=앱 첫 page_view(index.html 의 config)부터 q 가 빠지고, 인라인 처리가 track.js 와 같은 결과이며, page_location 을 config 매개변수로 고정하지 않음;
+//   fails_when=config 앞 set 이 빠지거나 두 처리가 어긋나거나 config 에 page_location 을 다시 넣음(이후 hit 에 첫 주소가 고정됨);
+//   why_new=기존 검사는 config 위치만 봄; seam=none; no_claim=gtag.js 가 set 값을 첫·이후 page_view 에 쓰는지(배포 뒤 DebugView)
+test('index.html 이 config 앞에서 q 뺀 page_location 을 set 하고, config 에는 page_location 을 넣지 않는다', () => {
+  const html = read('index.html');
+  const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((s) => s.includes("gtag('config'"));
+  assert.ok(inline, 'GA 설정 인라인 스크립트');
+  for (const [href, want] of LOC_CASES) {
+    const ctx = { URL, location: { hostname: 'supgaja.com', href }, document: { createElement: () => ({}), head: { appendChild() {} } } };
+    ctx.window = ctx;
+    vm.createContext(ctx);
+    vm.runInContext(inline, ctx);
+    const calls = [...ctx.dataLayer].map((a) => JSON.parse(JSON.stringify([...a])));
+    const si = calls.findIndex((a) => a[0] === 'set');
+    const ci = calls.findIndex((a) => a[0] === 'config');
+    assert.ok(si >= 0 && ci > si, `config 앞에 set: ${href}`);
+    assert.equal(calls[si][1].page_location, want, href);
+    assert.deepEqual(calls[ci], ['config', 'G-7W5GR0VK33'], `config 에 page_location 없음: ${href}`);
+    assert.deepEqual(load({ href }).sets(), [calls[si][1].page_location], `track.js 와 같은 결과: ${href}`);
+  }
+});
+
+// Value: protects=앱에서 검색한 뒤 사이트 안 다른 페이지로 가도 다음 페이지 GA page_referrer(document.referrer)에 원래 검색어가 없음;
+//   fails_when=index.html 의 referrer meta 가 빠지거나 전체 주소를 보내는 정책으로 바뀜; why_new=page_location 검사만 있었음; seam=none; no_claim=브라우저가 meta 정책을 적용하는지(배포 뒤 확인)
+test('index.html 은 referrer 로 출처만 보낸다(strict-origin)', () => {
+  assert.match(read('index.html'), /<meta name="referrer" content="strict-origin" \/>/);
 });
