@@ -6,11 +6,13 @@
 //   dist/forest/<id>/index.html    휴양림별 빈자리 페이지(검색 유입용)
 //   dist/vacancy/<지역>/[<시기>/]index.html  지역·시기 랜딩(이번 주말 경기 휴양림 빈자리 등)
 //   dist/sitemap.xml               위 페이지 포함
+//   dist/llms.txt                  AI 검색용 요약(무엇을·어디서·얼마나 자주, 주요 페이지, 지역별 빈자리 수)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { policyInfo } from '../src/lib/policy.mjs';
 import { networkLinks } from '../src/lib/network.mjs';
+import { buildLlmsTxt } from './llms.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(WEB, 'dist');
@@ -375,6 +377,7 @@ ${REGIONS.map((r) => {
 
 // ---- 5. 지역·시기 랜딩 ----
 const ALL = { code: '', slug: 'all', name: '전국', short: '전국' };
+const landingCount = new Map(); // `${지역 slug}:${시기 slug}` → 빈자리 있는 휴양림 수(llms.txt 요약에 씀)
 for (const r of [ALL, ...REGIONS]) {
   for (const p of PERIODS) {
     if (r === ALL && !p.slug) continue; // 전국 전체 기간은 홈과 같다
@@ -393,6 +396,7 @@ for (const r of [ALL, ...REGIONS]) {
       if (byDate.length) list.push({ f, byDate, n: byDate.reduce((m, d) => m + d.a + d.b, 0) });
     }
     list.sort((x, y) => y.n - x.n);
+    landingCount.set(`${r.slug}:${p.slug}`, list.length);
     const when = p.slug ? `${p.name}(${mdw(p.from)}${p.to !== p.from ? `~${mdw(p.to)}` : ''} 체크인)` : '';
     const title = p.slug ? `${p.name} ${r.name} 자연휴양림 빈자리` : `${r.name} 자연휴양림 빈자리·취소표`;
     const urlPath = `/vacancy/${r.slug}/${p.slug ? p.slug + '/' : ''}`;
@@ -453,5 +457,26 @@ ${[...fixed, ...urls].map((u) => `  <url><loc>${esc(SITE + u.loc)}</loc>${u.freq
 `;
 fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sm);
 
+// ---- 8. llms.txt (이슈 #1) ----
+{
+  const openDays = (f) => Object.values(AV.get(f.id)).reduce((m, mp) => m + mp.size, 0);
+  const llms = buildLlmsTxt({
+    site: SITE,
+    updatedKST: `${generatedKST.slice(0, 10)} ${generatedKST.slice(11, 16)} KST`,
+    range: { from: firstISO, to: addDays(start, status.days - 1), days: status.days - first },
+    forests: status.forests.length,
+    goods: status.forests.reduce((n, f) => n + f.goods.length, 0),
+    available: [...AV.values()].reduce((n, av) => n + Object.values(av).reduce((m, mp) => m + [...mp.values()].reduce((k, l) => k + l.length, 0), 0), 0),
+    weekends: { this: { from: PERIODS[1].from, to: PERIODS[1].to }, next: { from: PERIODS[2].from, to: PERIODS[2].to } },
+    regions: REGIONS.map((r) => {
+      const fs_ = status.forests.filter((f) => f.sido === r.code);
+      return { name: r.name, code: r.code, slug: r.slug, forests: fs_.length, open: fs_.filter((f) => openDays(f) > 0).length,
+        thisWeekend: landingCount.get(`${r.slug}:this-weekend`) ?? 0, nextWeekend: landingCount.get(`${r.slug}:next-weekend`) ?? 0 };
+    }),
+    nation: { thisWeekend: landingCount.get('all:this-weekend') ?? 0, nextWeekend: landingCount.get('all:next-weekend') ?? 0 },
+  });
+  fs.writeFileSync(path.join(DIST, 'llms.txt'), llms);
+}
+
 const kb = (f) => (fs.statSync(path.join(DIST, f)).size / 1024).toFixed(0) + 'KB';
-console.log(`정적 생성: 알림 피드 ${feedItems.length}건(${kb('alerts-feed.json')}) · 휴양림 페이지 ${status.forests.length} · 랜딩 ${urls.length - status.forests.length - 1} · sitemap ${fixed.length + urls.length}개 URL`);
+console.log(`정적 생성: 알림 피드 ${feedItems.length}건(${kb('alerts-feed.json')}) · 휴양림 페이지 ${status.forests.length} · 랜딩 ${urls.length - status.forests.length - 1} · sitemap ${fixed.length + urls.length}개 URL · llms.txt ${kb('llms.txt')}`);

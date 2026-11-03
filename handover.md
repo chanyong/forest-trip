@@ -61,6 +61,7 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
   - `/forest/` 전체 목록, `/forest/<insttId>` 휴양림별 페이지 185개(날짜별 빈자리, 최근 새로 빈 자리, 예약 오픈 안내, 같은 지역 휴양림 링크, LodgingBusiness·BreadcrumbList JSON-LD)
   - `/vacancy/<지역>/`, `/vacancy/<지역>/this-weekend/`, `/vacancy/<지역>/next-weekend/` 지역·시기 랜딩 29개(지역 slug: all, gyeonggi, gangwon, chungbuk, chungnam, jeonbuk, jeonnam, gyeongbuk, gyeongnam, jeju)
   - `/sitemap.xml`(위 페이지 포함 약 220개 URL, `public/sitemap.xml`은 대체용), `faq.html` 의 FAQPage JSON-LD(질문·답 원문에서 생성)
+  - `/llms.txt` AI 검색용 요약(무엇을·어디서·얼마나 자주 모으는지, 주요 페이지·데이터 JSON 링크, 상태 코드, 지역별 빈자리 휴양림 수). 본문은 `web/scripts/llms.mjs`, 검사는 `scripts/llms.test.mjs`
 - 예약 오픈 안내(`web/src/lib/policy.mjs`, 웹·정적 생성 공용): 숲나들e 예약정책 값(WEEK=매주 rsrvtBgDt 요일(1=일), MON=매월 rsrvtBgDt 일, rsrvtBgnTm 시각, dytmCycleEstbsVal 주)으로 계산한 마지막 날이 숲나들e 가 알려 준 현재 마지막 예약일과 **맞을 때만** 규칙·다음 오픈을 보여 준다(10-29 전수 확인 185곳 중 184곳 일치, 청평(사립)만 불일치 → 마지막 날만 표시).
 - `collector/stats.mjs`는 예약률 계산을 맡는다. 예약된 날은 대기·F, 예약 받는 날은 A+대기+F로 센다. 주말은 체크인 다음 날이 토·일·공휴일인 숙박이고, 표본이 10 미만이면 표시하지 않는다.
 - `collector/backfill-stats.mjs`는 집계 방식이나 요금을 바꿨을 때 기존 status.json을 다시 계산하는 1회용 스크립트다.
@@ -123,6 +124,7 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | 10-30 | (이번 커밋) | 네이버 서치어드바이저 등록: `web/index.html` head 에 `naver-site-verification` 메타 태그(지우면 소유 확인 풀림), 소유 확인 후 sitemap 제출 |
 | 10-31 | 95eb95a · (이번 커밋) | 하단 '운영자의 다른 서비스'를 11개 사이트 공통 카드 띠(.netband, 2/3/5열)로 교체(이슈 #2, 공통 사양 ddalkkak-rank#12). 데이터는 `web/src/lib/network.json` 한 곳, 링크는 `network.mjs`의 `networkLinks()`(현재 사이트 제외, URL API로 utm 두 개 부착)를 웹·정적 생성이 같이 쓴다. `public/faq·privacy·terms.html`은 손으로 맞추고 `cd web && npm test`가 일치를 검사한다. 브랜치 `design/network-footer`, 배포 전 |
 | 11-03 | PR #7 | 문의 이메일을 `1bangkr.info@gmail.com`으로 통일(이슈 #6, 대표 결정 2026-11-02): 처리방침·약관 mailto, JSON-LD email(`index.html`, `build-static.mjs`). `scripts/contact-email.test.mjs`가 화면에 나가는 파일의 이메일이 이 주소뿐인지 검사한다. 1장 '구글 계정'(cyjung@gmail.com)은 로그인 계정이라 그대로 |
+| 11-03 | (이번 PR) | `/llms.txt` 추가(이슈 #1, SITE_RULES 1-7): 빌드 마지막 단계(`build-static.mjs` 8절)가 수집 데이터로 매번 새로 만든다. 마지막 갱신 시각·수집 범위·예약가능 건수·지역별 이번/다음 주말 빈자리 휴양림 수를 담는다 |
 
 ### 가격순 정렬 규칙 (사용자와 합의)
 - 숙소와 야영장 요금을 섞어 비교하지 않는다.
