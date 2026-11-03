@@ -125,6 +125,7 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | 10-31 | 95eb95a · (이번 커밋) | 하단 '운영자의 다른 서비스'를 11개 사이트 공통 카드 띠(.netband, 2/3/5열)로 교체(이슈 #2, 공통 사양 ddalkkak-rank#12). 데이터는 `web/src/lib/network.json` 한 곳, 링크는 `network.mjs`의 `networkLinks()`(현재 사이트 제외, URL API로 utm 두 개 부착)를 웹·정적 생성이 같이 쓴다. `public/faq·privacy·terms.html`은 손으로 맞추고 `cd web && npm test`가 일치를 검사한다. 브랜치 `design/network-footer`, 배포 전 |
 | 11-03 | PR #7 | 문의 이메일을 `1bangkr.info@gmail.com`으로 통일(이슈 #6, 대표 결정 2026-11-02): 처리방침·약관 mailto, JSON-LD email(`index.html`, `build-static.mjs`). `scripts/contact-email.test.mjs`가 화면에 나가는 파일의 이메일이 이 주소뿐인지 검사한다. 1장 '구글 계정'(cyjung@gmail.com)은 로그인 계정이라 그대로 |
 | 11-03 | (이번 PR) | `/llms.txt` 추가(이슈 #1, SITE_RULES 1-7): 빌드 마지막 단계(`build-static.mjs` 8절)가 수집 데이터로 매번 새로 만든다. 마지막 갱신 시각·수집 범위·예약가능 건수·지역별 이번/다음 주말 빈자리 휴양림 수를 담는다 |
+| 11-03 | (이번 PR) | 하단 '운영자의 다른 서비스' 순서를 SITE_RULES 1-4 표준으로(이슈 #9, ops-hq#3, 기준표 ddalkkak-rank#12 11-03 댓글): 딸깍랭크 · 에어모아 · 내여행 찾아줌 · 이때다 · (숲가자) · ETFX · 카드매치 · 내 압구정 · 입시on · 자동차보험 환급 비교 · FPL Live. `network.json`과 `public/faq·privacy·terms.html` 순서만 바꿈(주소·설명·UTM 그대로) |
 
 ### 가격순 정렬 규칙 (사용자와 합의)
 - 숙소와 야영장 요금을 섞어 비교하지 않는다.
