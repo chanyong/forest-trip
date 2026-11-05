@@ -2,7 +2,7 @@
 // 중앙 서버는 https://supgaja.com/alerts-feed.json(빌드 때 scripts/build-static.mjs 가 생성)을 주기적으로 읽어
 // 아래 filters(모두 만족)에 맞는 항목이 새로 생기면 메일을 보낸다. 피드 attrs: forest(이름에서 '자연휴양림' 뺀 것),
 // forestId, region(서울/인천/경기 등 sidoName), date(YYYY-MM-DD 체크인), type(숙소|야영장), weekday, weekend, people(최대 정원), rooms.
-import { fmtDate, kindName, SIDOS, type Filters, type Forest, type Status, forestPasses, defaultFilters } from './data';
+import { fmtDate, kindName, SIDOS, type Filters, type Forest, type Status, forestPasses, defaultFilters, addDaysISO, dow, todayKST } from './data';
 
 export interface AlertFilter { key: string; op: 'eq' | 'in' | 'lte' | 'gte' | 'between'; value: unknown }
 export interface AlertRequest { site: 'supgaja.com'; label: string; filters: AlertFilter[] }
@@ -43,7 +43,7 @@ export async function openAlerts(req: AlertRequest): Promise<boolean> {
 const MAX_FORESTS = 40;
 
 // 지금 화면 조건(필터·즐겨찾기·열린 휴양림)을 알림 조건으로 바꾼다. 범위가 너무 넓으면 error 를 돌려준다.
-export function alertFromFilters(status: Status, f: Filters, favs: Set<string>, forest?: Forest | null): AlertRequest | { error: string } {
+export function alertFromFilters(status: Status, f: Filters, favs: Set<string>, forest?: Forest | null): AlertRequest | { error: string; broad?: boolean } {
   const filters: AlertFilter[] = [];
   const label: string[] = [];
   let ids: string[] | null = null;
@@ -76,7 +76,22 @@ export function alertFromFilters(status: Status, f: Filters, favs: Set<string>, 
   // 전국 + 긴 기간은 알림이 너무 많아진다
   const days = (Date.parse(f.to) - Date.parse(f.from)) / 864e5 + 1;
   if (!ids && !f.sidos.length && days > 14 && !f.weekend) {
-    return { error: '알림 범위가 너무 넓어요. 지역이나 휴양림을 고르거나, 기간을 2주 이내(또는 주말만)로 좁혀 주세요.' };
+    return { error: '알림 범위가 너무 넓어요. 지역이나 휴양림을 고르거나, 기간을 2주 이내(또는 주말만)로 좁혀 주세요.', broad: true };
   }
   return { site: 'supgaja.com', label: label.join(' · '), filters };
+}
+
+// 범위가 넓을 때 막지 않고 보여 줄 '좁힌 조건' 제안: 이번 주말·다음 주말(금~토 체크인)과 지역별
+export function narrowOptions(f: Filters, today = todayKST()): { label: string; patch: Partial<Filters> }[] {
+  const d = dow(today); // 0=일
+  const fri = d === 6 ? addDaysISO(today, -1) : addDaysISO(today, (5 - d + 7) % 7);
+  const first = d === 0 ? addDaysISO(today, 5) : fri; // 일요일이면 다음 금요일부터
+  const thisFrom = first < today ? today : first;
+  const nextFri = addDaysISO(first, 7);
+  const opt = (label: string, from: string, to: string) => ({ label, patch: { from, to, nights: f.nights, weekend: true } as Partial<Filters> });
+  return [
+    opt('이번 주말 (전국)', thisFrom, addDaysISO(first, 1)),
+    opt('다음 주말 (전국)', nextFri, addDaysISO(nextFri, 1)),
+    ...SIDOS.map((s) => ({ label: s.name, patch: { sidos: [s.code] } as Partial<Filters> })),
+  ];
 }

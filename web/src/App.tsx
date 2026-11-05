@@ -3,7 +3,7 @@ import {
   compute, defaultFilters, firstDataIdx, filtersFromURL, filtersToURL, freshIndex, isoOf,
   type Change, type Filters, type Forest, type Meta, type Status, type View,
 } from './lib/data';
-import { alertFromFilters, openAlerts } from './lib/alerts';
+import { alertFromFilters, narrowOptions, openAlerts } from './lib/alerts';
 import { useFavs } from './lib/favs';
 import { FilterBar } from './components/FilterBar';
 import { Summary } from './components/Summary';
@@ -146,10 +146,12 @@ export default function App() {
     const t = setTimeout(() => setNotice(''), 6000);
     return () => clearTimeout(t);
   }, [notice]);
-  const askAlert = useCallback((fo?: Forest | null) => {
+  const [narrow, setNarrow] = useState(false); // 범위가 넓을 때 좁힌 조건을 고르는 창
+  const askAlert = useCallback((fo?: Forest | null, patch?: Partial<Filters>) => {
     if (!status || !filters) return;
-    const req = alertFromFilters(status, filters, favs, fo);
-    if ('error' in req) { setNotice(req.error); return; }
+    const req = alertFromFilters(status, patch ? { ...filters, ...patch } : filters, favs, fo);
+    if ('error' in req) { if (req.broad) setNarrow(true); else { setNarrow(false); setNotice(req.error); } return; }
+    setNarrow(false);
     openAlerts(req).then((ok) => { if (!ok) setNotice('빈자리 이메일 알림은 곧 제공됩니다. 준비되면 이 버튼으로 바로 신청할 수 있어요.'); });
   }, [status, filters, favs]);
 
@@ -350,6 +352,20 @@ export default function App() {
           <ForestDrawer forest={forest} status={status} filters={filters} onClose={closeDrawer}
             fav={favs.has(forest.id)} toggleFav={() => toggleFav(forest.id)} onAlert={() => askAlert(forest)} />
         </Suspense>
+      )}
+      {narrow && (
+        <div className="narrow-back" onClick={() => setNarrow(false)}>
+          <div className="narrow" role="dialog" aria-label="알림 범위 좁히기" onClick={(e) => e.stopPropagation()}>
+            <b>전국·긴 기간은 알림이 너무 많아져요</b>
+            <p>아래 중 하나를 고르면 바로 알림 신청 창이 열려요.</p>
+            <div className="narrow-opts">
+              {narrowOptions(filters!).map((o) => (
+                <button key={o.label} className="btn" onClick={() => askAlert(null, o.patch)}>{o.label}</button>
+              ))}
+            </div>
+            <button className="btn" onClick={() => setNarrow(false)}>닫기</button>
+          </div>
+        </div>
       )}
       {notice && <div className="toast" role="status" onClick={() => setNotice('')}>{notice}</div>}
     </>
