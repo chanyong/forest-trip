@@ -150,7 +150,7 @@ export default function App() {
   const askAlert = useCallback((fo?: Forest | null, patch?: Partial<Filters>) => {
     if (!status || !filters) return;
     const req = alertFromFilters(status, patch ? { ...filters, ...patch } : filters, favs, fo);
-    if ('error' in req) { if (req.broad) setNarrow(true); else setNotice(req.error); return; }
+    if ('error' in req) { if (req.broad) setNarrow(true); else { setNarrow(false); setNotice(req.error); } return; }
     setNarrow(false);
     openAlerts(req).then((ok) => { if (!ok) setNotice('빈자리 이메일 알림은 곧 제공됩니다. 준비되면 이 버튼으로 바로 신청할 수 있어요.'); });
   }, [status, filters, favs]);
