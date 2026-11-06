@@ -7,12 +7,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bookingStats, weekendMask } from './stats.mjs';
+import { writeHistory } from './history.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MASTER = path.join(ROOT, 'data/master.json');
 const NAVER = path.join(ROOT, 'data/naver.json'); // collector/naver-reviews.mjs가 만든 리뷰 수
 const PRICES = path.join(ROOT, 'data/prices.json'); // collector/prices.mjs가 만든 객실 요금
 const OUT_DIR = path.join(ROOT, 'web/public/data');
+const HISTORY_DIR = path.join(ROOT, 'data/history'); // 빈자리 추이(하루 1파일, 90일 보관)
 const BASE = 'https://www.foresttrip.go.kr';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
 const BATCH = 5; // 서버가 요청당 객실 5개까지만 응답
@@ -265,6 +267,7 @@ async function main() {
   await fs.writeFile(path.join(OUT_DIR, 'status.json'), JSON.stringify(status));
   await fs.writeFile(path.join(OUT_DIR, 'changes.json'), JSON.stringify({ generatedAt, items }));
   await fs.writeFile(path.join(OUT_DIR, 'meta.json'), JSON.stringify(meta, null, 1));
+  try { await writeHistory(HISTORY_DIR, status); } catch (e) { console.error('추이 기록 실패(수집은 계속)', e.message); }
   console.log(`완료 ${meta.durationSec}s · 성공 ${ok} 실패 ${fail} · 객실 ${goods.size} · 예약가능 ${totals.available}칸 · 새로 열림 ${newItems.length}`);
   if (unknownCodes.size) console.log('미확인 상태코드', meta.unknownCodes);
 }
