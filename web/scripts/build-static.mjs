@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { policyInfo } from '../src/lib/policy.mjs';
 import { networkLinks } from '../src/lib/network.mjs';
 import { buildLlmsTxt } from './llms.mjs';
+import { loadHistory, trendSection } from './trend.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(WEB, 'dist');
@@ -20,6 +21,7 @@ const SITE = 'https://supgaja.com';
 const status = JSON.parse(fs.readFileSync(path.join(WEB, 'public/data/status.json'), 'utf8'));
 let changes = [];
 try { changes = JSON.parse(fs.readFileSync(path.join(WEB, 'public/data/changes.json'), 'utf8')).items || []; } catch { /* 없으면 빈 목록 */ }
+const HISTORY = loadHistory(path.join(WEB, '../data/history')); // 빈자리 추이(수집기가 하루 1파일씩 쌓음)
 const HOLIDAYS = JSON.parse(fs.readFileSync(path.join(WEB, 'src/lib/holidays.json'), 'utf8'));
 
 // ---- 날짜 ----
@@ -157,6 +159,10 @@ h2{font-size:1.1rem;margin:28px 0 10px}
 .card .k{font-size:.8rem;color:var(--ink-3)}
 .card .v{font-size:1.25rem;font-weight:800}
 .card .v small{font-size:.8rem;font-weight:600;color:var(--ink-2);margin-left:2px}
+.trends{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.trend{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.trend figcaption{font-size:.85rem;font-weight:700;margin-bottom:4px}
+.trend svg{width:100%;height:auto;display:block}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 .btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-weight:700;font-size:.92rem;text-decoration:none;cursor:pointer;font-family:inherit}
 .btn.primary{background:#1f5f3f;border-color:#1f5f3f;color:#fff}
@@ -334,6 +340,7 @@ ${stampLine}
   <a class="btn" href="https://www.foresttrip.go.kr/rep/or/sssn/monthRsrvtStatus.do?hmpgId=FRIP&amp;menuId=001004" target="_blank" rel="noopener" data-ga-item="${esc(f.name)}">숲나들e에서 예약 ↗</a>
   ${f.url ? `<a class="btn" href="${esc(f.url)}" target="_blank" rel="noopener">휴양림 홈페이지 ↗</a>` : ''}
 </div>
+${trendSection(HISTORY, f.id, kinds, kindName)}
 ${pol ? `<h2>예약은 언제 열리나요?</h2><div class="note">${pol.html}</div>` : ''}
 ${recent.length ? `<h2>최근 새로 빈 자리 <span class="fsub">(최근 72시간 안에 예약완료·대기에서 예약가능으로 바뀐 자리, 지금도 비어 있음)</span></h2>
 <ul class="flist">${recent.slice(0, 12).map((c) => `<li><b>${mdw(c.iso)}</b> ${esc(c.g.cls)} ${esc(c.g.name)}${c.at === generatedAt ? '<span class="new">NEW</span>' : ''}<div class="fsub">${kstFmt(c.at)} 수집에서 확인</div></li>`).join('')}</ul>` : ''}

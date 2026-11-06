@@ -1,6 +1,6 @@
 # 숲가자(supgaja.com) 인수인계
 
-최종 갱신: 2026-11-03
+최종 갱신: 2026-11-06
 다음 Claude Code 세션은 이 파일을 먼저 읽고 사이트 관리를 이어 간다. 세부 기술 설명은 `README.md`에 있다.
 
 ---
@@ -129,6 +129,8 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | 11-03 | (이번 PR) | 하단 '운영자의 다른 서비스' 순서를 SITE_RULES 1-4 표준으로(이슈 #9, ops-hq#3, 기준표 ddalkkak-rank#12 11-03 댓글): 딸깍랭크 · 에어모아 · 내여행 찾아줌 · 이때다 · (숲가자) · ETFX · 카드매치 · 내 압구정 · 입시on · 자동차보험 환급 비교 · FPL Live. `network.json`과 `public/faq·privacy·terms.html` 순서만 바꿈(주소·설명·UTM 그대로) |
 | 11-03 | (이번 PR) | GA4 전환 이벤트(이슈 #11, 수익화 보고서 v2): `affiliate_click`·`alert_signup`·`search`·`outbound_click`·`feedback_open`. 기존 gtag만 쓰고 새 추적 도구는 없음. 처리방침 방문 통계 항목에 이용 기록 추가, 시행일 2026-11-03. affiliate_click 은 `data-ga-item` 을 단 예약 링크만(휴양림 홈페이지는 모두 foresttrip.go.kr 이지만 outbound_click). faq.html GA 에도 supgaja.com 호스트 조건을 넣음. 관제 창 몫(GA4 관리 화면): 핵심 이벤트는 `alert_signup` 만 지정하고 alerts.js 가 함께 보내는 `alert_subscribe` 는 지정하지 않는다(두 배로 셈), 맞춤 측정기준 partner·item·method·site 와 맞춤 측정항목 results 등록(소급 안 됨), 향상된 측정의 '사이트 내 검색'(q 매개변수)·'이탈 클릭'이 이 이벤트와 겹치거나 정리 안 된 검색어를 보내는지 확인 |
 | 11-03 | (이번 PR) | GA로 보내는 page_location에서 주소의 검색어 `q`만 뺌(이슈 #11 대표 결정 A, 처리방침 '검색어는 이메일·전화번호를 지우고 보냄'과 맞춤). 주소창의 `?q=`(공유 링크)는 그대로. index.html의 config 앞 set·referrer meta(strict-origin) + track.js set·history 감싸기·event 래퍼. GA가 스스로 보내는 기록 기반 page_view·사이트 내 검색은 코드로 막을 수 없어 관제 창이 GA4 '데이터 수정(Redact data)'에 쿼리 매개변수 q를 넣고 사이트 내 검색에서 q를 뺀다. 정적 페이지(faq·privacy·terms·build-static)는 q를 쓰지 않아 track.js의 set만으로 둠. 향상된 측정의 기록 기반 page_view가 set 값을 따르는지는 배포 뒤 GA4 DebugView로 확인 |
+
+| 11-06 | (이번 PR) | 휴양림 빈자리 추이(이슈 #15): 수집 회차마다 `collector/history.mjs`가 휴양림별 [숙소 가능 건수, 야영장 가능 건수, 숙소 예약률%, 야영장 예약률%]를 `data/history/YYYYMMDD.json`(KST 하루 1파일, 같은 날은 마지막 회차가 덮어씀, 90일 보관)에 쌓고, `crawl.yml`이 이 폴더를 함께 커밋한다. 상세 페이지(`/forest/<id>`)는 `web/scripts/trend.mjs`가 최근 4주 선 그래프(SVG)를 그린다(수집 이틀 미만이면 '쌓는 중' 안내). 수집 주기·대상은 그대로. 추이 기록이 실패해도 수집은 계속한다 |
 
 ### 가격순 정렬 규칙 (사용자와 합의)
 - 숙소와 야영장 요금을 섞어 비교하지 않는다.

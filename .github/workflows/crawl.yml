@@ -48,6 +48,7 @@ jobs:
           git config user.name "forest-trip-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add web/public/data/status.json web/public/data/changes.json web/public/data/meta.json
+          [ -d data/history ] && git add data/history || true
           git diff --cached --quiet && { echo "변경 없음"; exit 0; }
           git commit -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"
           git pull --rebase -X theirs origin main || true
