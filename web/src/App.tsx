@@ -336,6 +336,9 @@ export default function App() {
           <p>
             <b>문의·수집 중단 요청</b> · 화면 아래 '의견·질문' 버튼으로 알려 주세요.
           </p>
+          <p className="biz">
+            <b>사업자 정보</b> · 대표: 홍지혜(넥스트웨이브) · 사업자등록번호: 311-11-67514
+          </p>
           <nav className="links" aria-label="사이트 링크">
             <a href="/forest/">휴양림별 빈자리</a>
             <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a>
