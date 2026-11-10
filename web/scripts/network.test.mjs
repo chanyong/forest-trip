@@ -1,4 +1,4 @@
-// 하단 '운영자의 다른 서비스' 링크 검사 (이슈 #2). 실행: npm test
+// '운영자의 다른 서비스' 링크 검사 (이슈 #2, #25: 띠는 /network 로 분리). 실행: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -38,13 +38,31 @@ test('주소에 경로·쿼리가 있으면 &로 이어 붙이고, self 는 끝 
   assert.deepEqual(out.map((l) => l.href), ['https://x.example/p?a=1&utm_source=supgaja&utm_medium=footer_network']);
 });
 
-test('정적 페이지(faq·privacy·terms)의 손으로 맞춘 목록이 network.json 과 같다', () => {
-  const want = links.map((l) => l.href.replace(/&/g, '&amp;'));
-  for (const f of ['faq.html', 'privacy.html', 'terms.html']) {
+test('정적 페이지(faq·privacy·terms·about)에는 다른 서비스 띠가 없고 /network 한 줄 링크만 있다 (이슈 #25)', () => {
+  for (const f of ['faq.html', 'privacy.html', 'terms.html', 'about.html']) {
     const html = fs.readFileSync(path.join(WEB, 'public', f), 'utf8');
-    const band = html.match(/<nav class="netband"[\s\S]*?<\/nav>/);
-    assert.ok(band, `${f}: 띠가 없다`);
-    const got = [...band[0].matchAll(/<a href="([^"]+)" target="_blank" rel="noopener">/g)].map((m) => m[1]);
-    assert.deepEqual(got, want, f);
+    assert.ok(!html.includes('netband'), `${f}: 띠가 남아 있다`);
+    assert.ok(!html.includes('utm_medium=footer_network'), `${f}: 외부 서비스 링크가 남아 있다`);
+    assert.ok(html.includes('<a href="/network">운영자의 다른 서비스</a>'), `${f}: /network 링크가 없다`);
   }
+});
+
+test('빌드 스크립트: 모든 정적 페이지 푸터에 /network 링크, 띠는 /network 페이지에서만 (이슈 #25)', () => {
+  const s = fs.readFileSync(path.join(WEB, 'scripts/build-static.mjs'), 'utf8');
+  assert.ok(!s.includes('${networkBand}\n<footer>'), '공통 푸터 앞에 띠가 붙어 있다');
+  assert.ok(s.includes("urlPath: '/network'") && s.includes('noindex'));
+  assert.ok(s.split('<a href="/network">운영자의 다른 서비스</a>').length - 1 >= 2, '푸터 링크 부족');
+  const app = fs.readFileSync(path.join(WEB, 'src/App.tsx'), 'utf8');
+  assert.ok(!app.includes('netband') && app.includes('href="/network"'));
+});
+
+test('빌드 결과(dist)가 있으면 홈·휴양림 페이지에 외부 서비스 링크가 없고 /network 에 10곳이 있다', { skip: !fs.existsSync(path.join(WEB, 'dist/network/index.html')) }, () => {
+  for (const f of ['index.html', 'forest/index.html']) {
+    if (!fs.existsSync(path.join(WEB, 'dist', f))) continue;
+    const h = fs.readFileSync(path.join(WEB, 'dist', f), 'utf8');
+    assert.ok(!h.includes('utm_medium=footer_network'), f);
+  }
+  const n = fs.readFileSync(path.join(WEB, 'dist/network/index.html'), 'utf8');
+  const got = [...n.matchAll(/<a href="([^"]+utm_medium=footer_network)" target="_blank" rel="noopener">/g)].map((m) => m[1]);
+  assert.deepEqual(got, links.map((l) => l.href.replace(/&/g, '&amp;')));
 });
