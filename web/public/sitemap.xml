@@ -4,6 +4,7 @@
   <url><loc>https://supgaja.com/?view=map</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
   <url><loc>https://supgaja.com/?view=calendar</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
   <url><loc>https://supgaja.com/?view=grid</loc><changefreq>hourly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://supgaja.com/insights/</loc><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://supgaja.com/faq.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://supgaja.com/privacy</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
   <url><loc>https://supgaja.com/terms</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
