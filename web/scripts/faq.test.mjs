@@ -13,6 +13,17 @@ test('faq: 20~30문항, 질문 중복 없음', () => {
   assert.equal(new Set(it.map((x) => x.q)).size, it.length);
 });
 
+test('faq: <!doctype html> 로 시작하고 모든 문항이 <main> 안에 있다', () => {
+  const s = read('public/faq.html');
+  assert.ok(s.startsWith('<!doctype html>'));
+  const m0 = s.indexOf('<main'), m1 = s.indexOf('</main>');
+  assert.ok(m0 > 0 && m1 > m0);
+  const all = (s.match(/<details class="item">/g) || []).length;
+  const inMain = (s.slice(m0, m1).match(/<details class="item">/g) || []).length;
+  assert.equal(inMain, all);
+  assert.equal(all, items().length);
+});
+
 test('faq: 문항마다 근거와 확인일(YYYY-MM-DD)', () => {
   for (const { q, a } of items()) {
     assert.match(a, /<p class="src">근거: [^<]+ · 확인일 \d{4}-\d{2}-\d{2}<\/p>/, `근거·확인일 없음: ${q}`);
