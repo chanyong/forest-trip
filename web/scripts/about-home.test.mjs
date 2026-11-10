@@ -44,3 +44,27 @@ test('빌드 결과(dist)가 있으면 홈 본문에 휴양림 링크와 사업�
   assert.ok(!h.includes('<!--HOME_STATIC-->'));
   assert.ok(!read('dist/about.html').includes('{{FOREST_COUNT}}'));
 });
+
+test('about.html: 알림 섹션이 있고 검증 안 된 문구는 없다 (이슈 #20)', () => {
+  const s = read('public/about.html');
+  assert.match(s, /<h2 id="alerts">빈자리 이메일 알림<\/h2>/);
+  assert.match(s, /확인 메일/);
+  assert.match(s, /예약 대행이 아니며/);
+  assert.match(s, /이미 마감됐을 수 있습니다/);
+  assert.match(s, /7일 뒤 삭제/);
+  assert.ok(s.includes('href="/privacy"'));
+  for (const bad of ['즉시 알림', '새로 생긴', '하루']) {
+    assert.ok(!s.includes(bad), `about.html에 금지 문구: ${bad}`);
+  }
+});
+
+test('faq.html: 알림 항목이 about 알림 설명과 모순되지 않는다 (이슈 #20)', () => {
+  const s = read('public/faq.html');
+  const i = s.indexOf('빈자리가 나면 알려 줄 수 있나요?');
+  const item = s.slice(i, s.indexOf('</details>', i));
+  assert.match(item, /이미 마감됐을 수 있습니다/);
+  assert.match(item, /\/about#alerts/);
+  for (const bad of ['즉시 알림', '새로 생긴', '새 빈자리', '하루']) {
+    assert.ok(!item.includes(bad), `faq 알림 항목에 금지 문구: ${bad}`);
+  }
+});
