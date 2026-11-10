@@ -113,7 +113,7 @@ test('그 밖의 외부 링크는 outbound_click, 사이트 안 링크·전화·
   click(el('a', { href: '/forest/0102' }));
   click(el('a', { href: 'https://supgaja.com/faq.html' }));
   click(el('a', { href: 'tel:031-000-0000' }));
-  click(el('a', { href: 'mailto:1bangkr.info@gmail.com' }));
+  click(el('a', { href: 'mailto:supgaja@gmail.com' }));
   click(el('button'));
   // Value: protects=foresttrip.go.kr 와 비슷한 다른 도메인은 data-ga-item 이 있어도 affiliate_click 이 아님; fails_when=partnerOf 가 endsWith·includes 로 느슨해짐;
   //   why_new=기존 행은 진짜 foresttrip 하위 도메인만 씀; seam=none; no_claim=실제 브라우저 URL 파싱(Node URL 로 대신)
