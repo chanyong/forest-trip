@@ -222,7 +222,7 @@ const alertAttr = (o) => esc(JSON.stringify({ site: 'supgaja.com', ...o }));
 function page({ urlPath, title, description, body, jsonld = [] }) {
   const url = SITE + urlPath;
   const ld = [
-    { '@context': 'https://schema.org', '@type': 'Organization', name: '숲가자', url: SITE + '/', logo: SITE + '/icon-512.png', founder: { '@type': 'Person', name: 'chanyong' }, email: '1bangkr.info@gmail.com' },
+    { '@context': 'https://schema.org', '@type': 'Organization', name: '숲가자', url: SITE + '/', logo: SITE + '/icon-512.png', legalName: '넥스트웨이브', taxID: '311-11-67514', founder: { '@type': 'Person', name: '홍지혜' }, email: '1bangkr.info@gmail.com' },
     ...jsonld,
   ];
   return `<!doctype html>
@@ -265,7 +265,7 @@ ${body}
 ${networkBand}
 <footer>
   <p>숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 약 3시간마다 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 실제 예약 가능 여부는 수집 이후 바뀌었을 수 있으니 예약·결제는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요.</p>
-  <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a></nav>
+  <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/about">소개</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a></nav>
   <p class="biz"><b>사업자 정보</b> · 대표: 홍지혜(넥스트웨이브) · 사업자등록번호: 311-11-67514</p>
 </footer>
 <script src="https://ddalkkakrank.kr/feedback.js" defer data-color="#0b6e4f"></script>
@@ -448,6 +448,34 @@ ${list.slice(0, 80).map(({ f, byDate }) => `<tr><td><a href="${forestUrl(f)}"><b
   console.log(`FAQPage 질문 ${qa.length}개`);
 }
 
+// ---- 6-1. 소개 페이지와 홈 초기 HTML (이슈 #20) ----
+// about.html 은 휴양림 수를 빌드 때 채운다. 홈(index.html)은 JS 없이도 서비스 설명·지역별 휴양림 링크·사업자 푸터가 보이게 한다.
+{
+  const n = String(status.forests.length);
+  const aboutFile = path.join(DIST, 'about.html');
+  fs.writeFileSync(aboutFile, fs.readFileSync(aboutFile, 'utf8').replaceAll('{{FOREST_COUNT}}', n));
+  const regionLists = REGIONS.map((r) => {
+    const fs_ = status.forests.filter((f) => f.sido === r.code).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    if (!fs_.length) return '';
+    return `<h3 style="font-size:15px;margin:16px 0 4px;color:#1d2420"><a href="/vacancy/${r.slug}/" style="color:inherit">${esc(r.name)}</a> (${fs_.length}곳)</h3><p style="margin:0;font-size:14px">${fs_.map((f) => `<a href="${forestUrl(f)}">${esc(f.name)}</a>`).join(' · ')}</p>`;
+  }).join('');
+  const home = `<section style="max-width:760px;margin:0 auto;padding:0 16px 32px;color:#4b5650;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.7;font-size:15px">
+<h2 style="font-size:18px;color:#1d2420">숲가자는 이런 서비스입니다</h2>
+<p>숲가자는 전국 자연휴양림 ${n}곳의 숙소·야영장 예약 빈자리를 한곳에 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 약 3시간마다 모으며, 마지막 갱신 ${esc(kstTime)} 기준입니다. 이 사이트는 예약 대행이 아니며 결제도 없습니다. 예약은 숲나들e에서 직접 하세요. <a href="/about">서비스 소개</a> · <a href="/faq.html">자주 묻는 질문</a></p>
+<h2 style="font-size:18px;color:#1d2420">이용 방법</h2>
+<ol style="padding-left:20px"><li>지역과 기간(예: 이번 주말)을 고릅니다.</li><li>숙소와 야영장 중 원하는 것과 인원을 정합니다.</li><li>목록·지도·달력·월간 그리드로 빈자리를 확인하고, 예약은 숲나들e에서 합니다.</li></ol>
+<p>바로 가기: <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a> · <a href="/vacancy/all/next-weekend/">다음 주말 빈자리</a> · <a href="/forest/">휴양림 전체 목록</a></p>
+<h2 style="font-size:18px;color:#1d2420">지역별 휴양림</h2>
+${regionLists}
+<p style="margin-top:28px;padding-top:12px;border-top:1px solid #e2e0d6;font-size:13px;color:#646e68"><a href="/about">소개</a> · <a href="/privacy">개인정보처리방침</a> · <a href="/terms">이용약관</a></p>
+<p style="font-size:13px;color:#646e68"><b>사업자 정보</b> · 대표: 홍지혜(넥스트웨이브) · 사업자등록번호: 311-11-67514</p>
+</section>`;
+  const idx = path.join(DIST, 'index.html');
+  const html = fs.readFileSync(idx, 'utf8');
+  if (!html.includes('<!--HOME_STATIC-->')) throw new Error('index.html 에 HOME_STATIC 자리가 없음');
+  fs.writeFileSync(idx, html.replace('<!--HOME_STATIC-->', home));
+}
+
 // ---- 7. sitemap ----
 const today = generatedKST.slice(0, 10);
 const fixed = [
@@ -455,6 +483,7 @@ const fixed = [
   { loc: '/?view=map', freq: 'hourly', pri: '0.8' },
   { loc: '/?view=calendar', freq: 'hourly', pri: '0.8' },
   { loc: '/?view=grid', freq: 'hourly', pri: '0.6' },
+  { loc: '/about', freq: 'monthly', pri: '0.6' },
   { loc: '/faq.html', freq: 'monthly', pri: '0.5' },
   { loc: '/privacy', freq: 'yearly', pri: '0.2' },
   { loc: '/terms', freq: 'yearly', pri: '0.2' },

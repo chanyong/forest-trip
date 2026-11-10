@@ -42,6 +42,7 @@ export function buildLlmsTxt(o) {
 - 휴양림별 페이지 \`${S}/forest/<휴양림 ID>\`: 정적 HTML. 날짜별 예약가능 객실 수, 최근 새로 빈 자리, 예약 오픈 일정, 주말 평균 요금, 예약률, 같은 지역 휴양림
 - [이번 주말 전국 빈자리](${S}/vacancy/all/this-weekend/) (${o.weekends.this.from} ~ ${o.weekends.this.to} 체크인) · [다음 주말 전국 빈자리](${S}/vacancy/all/next-weekend/) (${o.weekends.next.from} ~ ${o.weekends.next.to} 체크인)
 - 지역별 빈자리 \`${S}/vacancy/<지역>/\`, 주말은 뒤에 \`this-weekend/\`·\`next-weekend/\` (지역 slug 는 아래 표, 전국은 all)
+- [서비스 소개](${S}/about): 하는 일·하지 않는 일, 데이터 출처와 갱신
 - [자주 묻는 질문](${S}/faq.html): 상태 뜻, 예약 오픈, 대기·추첨, 알림
 - [개인정보처리방침](${S}/privacy) · [이용약관](${S}/terms) · [sitemap](${S}/sitemap.xml)
 

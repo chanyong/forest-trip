@@ -341,6 +341,7 @@ export default function App() {
           </p>
           <nav className="links" aria-label="사이트 링크">
             <a href="/forest/">휴양림별 빈자리</a>
+            <a href="/about">소개</a>
             <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a>
             <a href="/faq.html">자주 묻는 질문</a>
             <a href="/privacy">개인정보처리방침</a>
