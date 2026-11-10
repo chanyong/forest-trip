@@ -442,7 +442,7 @@ ${list.slice(0, 80).map(({ f, byDate }) => `<tr><td><a href="${forestUrl(f)}"><b
   const html = fs.readFileSync(file, 'utf8');
   const strip = (x) => x.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
   const qa = [...html.matchAll(/<details class="item"><summary>([\s\S]*?)<\/summary><div class="a">([\s\S]*?)<\/div><\/details>/g)]
-    .map(([, q, a]) => ({ '@type': 'Question', name: strip(q), acceptedAnswer: { '@type': 'Answer', text: strip(a) } }));
+    .map(([, q, a]) => ({ '@type': 'Question', name: strip(q), acceptedAnswer: { '@type': 'Answer', text: strip(a.replace(/<p class="src">[\s\S]*?<\/p>/g, '')) } }));
   const ld = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa };
   fs.writeFileSync(file, html.replace('<!--FAQ_JSONLD-->', `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`));
   console.log(`FAQPage 질문 ${qa.length}개`);
