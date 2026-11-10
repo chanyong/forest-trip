@@ -1,0 +1,218 @@
+{
+ "issue": 22,
+ "basis": "2026-11-10 수집본 status.json",
+ "criteria": "네이버 방문자 리뷰+블로그 리뷰 합계가 많은 순(forest.naver.v+b). 객실 목록과 요금이 모두 수집된 곳만. 동점이면 객실 수, 그다음 ID 순. 리뷰 내용은 쓰지 않고 건수만 정렬에 쓴다.",
+ "sampleRule": "상위 30곳 중 순번(0부터) 3으로 나눈 나머지가 2가 아닌 20곳을 사실 검수 표본으로 한다.",
+ "forests": [
+  {
+   "rank": 1,
+   "id": "ID02030053",
+   "name": "제주절물자연휴양림",
+   "sample": true,
+   "reviews": 13460
+  },
+  {
+   "rank": 2,
+   "id": "ID02030106",
+   "name": "장태산자연휴양림",
+   "sample": true,
+   "reviews": 7174
+  },
+  {
+   "rank": 3,
+   "id": "ID02030086",
+   "name": "안면도자연휴양림",
+   "sample": false,
+   "reviews": 5636
+  },
+  {
+   "rank": 4,
+   "id": "ID02030031",
+   "name": "용인자연휴양림",
+   "sample": true,
+   "reviews": 5237
+  },
+  {
+   "rank": 5,
+   "id": "0101",
+   "name": "유명산자연휴양림",
+   "sample": true,
+   "reviews": 5166
+  },
+  {
+   "rank": 6,
+   "id": "ID02030012",
+   "name": "영인산자연휴양림",
+   "sample": false,
+   "reviews": 3687
+  },
+  {
+   "rank": 7,
+   "id": "ID02030050",
+   "name": "축령산자연휴양림",
+   "sample": true,
+   "reviews": 3321
+  },
+  {
+   "rank": 8,
+   "id": "ID02030013",
+   "name": "서귀포자연휴양림",
+   "sample": true,
+   "reviews": 2894
+  },
+  {
+   "rank": 9,
+   "id": "ID02030014",
+   "name": "붉은오름자연휴양림",
+   "sample": false,
+   "reviews": 2490
+  },
+  {
+   "rank": 10,
+   "id": "0106",
+   "name": "청태산자연휴양림",
+   "sample": true,
+   "reviews": 2412
+  },
+  {
+   "rank": 11,
+   "id": "0301",
+   "name": "신시도자연휴양림",
+   "sample": true,
+   "reviews": 2364
+  },
+  {
+   "rank": 12,
+   "id": "0187",
+   "name": "희리산자연휴양림",
+   "sample": false,
+   "reviews": 2331
+  },
+  {
+   "rank": 13,
+   "id": "ID02030093",
+   "name": "비슬산자연휴양림",
+   "sample": true,
+   "reviews": 2276
+  },
+  {
+   "rank": 14,
+   "id": "ID02030056",
+   "name": "교래자연휴양림",
+   "sample": true,
+   "reviews": 2219
+  },
+  {
+   "rank": 15,
+   "id": "ID02030109",
+   "name": "항노화힐링랜드",
+   "sample": false,
+   "reviews": 2147
+  },
+  {
+   "rank": 16,
+   "id": "0192",
+   "name": "남해편백자연휴양림",
+   "sample": true,
+   "reviews": 2060
+  },
+  {
+   "rank": 17,
+   "id": "ID02030023",
+   "name": "동두천자연휴양림",
+   "sample": true,
+   "reviews": 1902
+  },
+  {
+   "rank": 18,
+   "id": "ID02030111",
+   "name": "만인산자연휴양림",
+   "sample": false,
+   "reviews": 1791
+  },
+  {
+   "rank": 19,
+   "id": "ID02030078",
+   "name": "성주산자연휴양림",
+   "sample": true,
+   "reviews": 1743
+  },
+  {
+   "rank": 20,
+   "id": "0103",
+   "name": "산음자연휴양림",
+   "sample": true,
+   "reviews": 1691
+  },
+  {
+   "rank": 21,
+   "id": "ID02030036",
+   "name": "장령산자연휴양림",
+   "sample": false,
+   "reviews": 1618
+  },
+  {
+   "rank": 22,
+   "id": "0189",
+   "name": "변산자연휴양림",
+   "sample": true,
+   "reviews": 1542
+  },
+  {
+   "rank": 23,
+   "id": "ID02030065",
+   "name": "의왕바라산자연휴양림",
+   "sample": true,
+   "reviews": 1479
+  },
+  {
+   "rank": 24,
+   "id": "0111",
+   "name": "대관령자연휴양림",
+   "sample": false,
+   "reviews": 1401
+  },
+  {
+   "rank": 25,
+   "id": "0105",
+   "name": "신불산자연휴양림",
+   "sample": true,
+   "reviews": 1385
+  },
+  {
+   "rank": 26,
+   "id": "0109",
+   "name": "방태산자연휴양림",
+   "sample": true,
+   "reviews": 1383
+  },
+  {
+   "rank": 27,
+   "id": "ID02030079",
+   "name": "양평쉬자파크",
+   "sample": false,
+   "reviews": 1381
+  },
+  {
+   "rank": 28,
+   "id": "0104",
+   "name": "아세안자연휴양림",
+   "sample": true,
+   "reviews": 1367
+  },
+  {
+   "rank": 29,
+   "id": "ID02030038",
+   "name": "대운산자연휴양림",
+   "sample": true,
+   "reviews": 1348
+  },
+  {
+   "rank": 30,
+   "id": "ID02030090",
+   "name": "제암산자연휴양림",
+   "sample": false,
+   "reviews": 1300
+  }
+ ]
+}

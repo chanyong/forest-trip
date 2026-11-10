@@ -14,6 +14,7 @@ import { policyInfo } from '../src/lib/policy.mjs';
 import { networkLinks } from '../src/lib/network.mjs';
 import { buildLlmsTxt } from './llms.mjs';
 import { loadHistory, trendSection } from './trend.mjs';
+import { detailSection } from './forest-detail.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(WEB, 'dist');
@@ -291,6 +292,8 @@ for (const c of changes) {
   recentByForest.get(c.forest).push({ ...c, g: x.g, iso: isoOf(c.date) });
 }
 
+// 시설 안내 구역(이슈 #22)은 상위 30곳에만 붙인다(src/lib/top-forests.json). 표본 검수 통과 전 전체 공개 금지.
+const TOP = new Set(JSON.parse(fs.readFileSync(path.join(WEB, 'src/lib/top-forests.json'), 'utf8')).forests.map((x) => x.id));
 const forestUrl = (f) => `/forest/${encodeURIComponent(f.id)}`;
 const urls = [];
 for (const f of status.forests) {
@@ -348,6 +351,7 @@ ${recent.length ? `<h2>최근 새로 빈 자리 <span class="fsub">(최근 72시
 <h2>날짜별 빈자리 <span class="fsub">(체크인 날짜 기준 1박, 빨간 날짜는 주말·연휴 숙박)</span></h2>
 ${dates.length ? `<table><thead><tr><th>체크인</th>${kinds.map((k) => `<th>${kindName(k)} 예약가능</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
 ${dates.length > 60 ? `<p class="fsub">외 ${dates.length - 60}일 더 있음 — <a href="/?forest=${encodeURIComponent(f.id)}">전체 보기</a></p>` : ''}` : '<p class="note">지금은 숲나들e에 예약가능으로 표시된 날짜가 없습니다. 취소가 나오면 알림으로 받아 보세요.</p>'}
+${TOP.has(f.id) ? detailSection(f, generatedAt) : ''}
 ${nearby.length ? `<h2>${esc(reg?.name || f.sidoName)}의 다른 휴양림</h2><ul class="flist">${nearby.map(({ x, n }) => `<li><a href="${forestUrl(x)}">${esc(x.name)}</a><div class="fsub">${esc(x.sigungu)} · 빈자리 ${n}일</div></li>`).join('')}</ul>` : ''}
 `;
   const ld = [{
