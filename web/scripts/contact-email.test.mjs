@@ -54,3 +54,12 @@ test('처리방침·약관·JSON-LD에 공통 문의 주소가 있다', () => {
   assert.ok(read('index.html').includes(`"email":"${CONTACT}"`), 'index.html JSON-LD email');
   assert.ok(read('scripts/build-static.mjs').includes(`email: '${CONTACT}'`), '정적 페이지 JSON-LD email');
 });
+
+test('처리방침·약관의 운영자 표기가 사업자 정보와 같다 (이슈 #20)', () => {
+  for (const f of ['public/privacy.html', 'public/terms.html']) {
+    const s = read(f);
+    assert.ok(s.includes('운영자 넥스트웨이브(대표 홍지혜)'), f);
+    assert.ok(!/운영자:? chanyong/.test(s), f);
+  }
+  assert.ok(read('public/about.html').includes('mailto:supgaja@gmail.com'));
+});
