@@ -103,6 +103,10 @@
       "destination": "/about.html"
     },
     {
+      "source": "/insights",
+      "destination": "/insights/index.html"
+    },
+    {
       "source": "/privacy",
       "destination": "/privacy.html"
     },

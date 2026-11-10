@@ -14,6 +14,7 @@ import { policyInfo } from '../src/lib/policy.mjs';
 import { networkLinks } from '../src/lib/network.mjs';
 import { buildLlmsTxt } from './llms.mjs';
 import { loadHistory, trendSection } from './trend.mjs';
+import { computeStats, historySeries, insightsBody } from './insights.mjs';
 import { detailSection } from './forest-detail.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -490,6 +491,22 @@ ${regionLists}
   fs.writeFileSync(idx, html.replace('<!--HOME_STATIC-->', home));
 }
 
+// ---- 6-2. 데이터 인사이트 (이슈 #23) ----
+{
+  const stats = computeStats(status, { first, dow, dateOf: (i) => addDays(start, i), regionName: (c) => REGIONS.find((r) => r.code === c)?.name });
+  const body = insightsBody({
+    esc, DOW, forestUrl, kstTime, stats, series: historySeries(HISTORY), forestCount: status.forests.length,
+    rangeText: stats.firstISO ? `${md(stats.firstISO)} ~ ${md(stats.lastISO)}` : '',
+  });
+  write('insights', page({
+    urlPath: '/insights/',
+    title: '자연휴양림 빈자리 데이터 인사이트 · 숲가자',
+    description: '전국 자연휴양림 예약 현황을 체크인 요일·월·지역별로 집계한 마감률. 집계 기간·산식·표본 수와 한계를 함께 적었습니다.',
+    body,
+    jsonld: [{ '@context': 'https://schema.org', '@type': 'Article', headline: '자연휴양림 빈자리 데이터 인사이트 (초판)', dateModified: generatedKST, inLanguage: 'ko', publisher: { '@type': 'Organization', name: '숲가자', url: SITE + '/' }, mainEntityOfPage: SITE + '/insights/' }],
+  }));
+}
+
 // ---- 7. sitemap ----
 const today = generatedKST.slice(0, 10);
 const fixed = [
@@ -498,6 +515,7 @@ const fixed = [
   { loc: '/?view=calendar', freq: 'hourly', pri: '0.8' },
   { loc: '/?view=grid', freq: 'hourly', pri: '0.6' },
   { loc: '/about', freq: 'monthly', pri: '0.6' },
+  { loc: '/insights/', freq: 'daily', pri: '0.5' },
   { loc: '/faq.html', freq: 'monthly', pri: '0.5' },
   { loc: '/privacy', freq: 'yearly', pri: '0.2' },
   { loc: '/terms', freq: 'yearly', pri: '0.2' },
