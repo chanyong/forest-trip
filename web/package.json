@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/build-static.mjs",
     "lint": "oxlint",
-    "test": "node --test scripts/network.test.mjs scripts/no-github-links.test.mjs scripts/contact-email.test.mjs scripts/llms.test.mjs scripts/track.test.mjs scripts/alerts-narrow.test.mjs scripts/trend.test.mjs scripts/business-info.test.mjs scripts/about-home.test.mjs scripts/insights.test.mjs",
+    "test": "node --test scripts/network.test.mjs scripts/no-github-links.test.mjs scripts/contact-email.test.mjs scripts/llms.test.mjs scripts/track.test.mjs scripts/alerts-narrow.test.mjs scripts/trend.test.mjs scripts/business-info.test.mjs scripts/about-home.test.mjs scripts/crawl-schedule.test.mjs scripts/faq.test.mjs scripts/forest-detail.test.mjs scripts/insights.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

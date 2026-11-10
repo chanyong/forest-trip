@@ -10,8 +10,6 @@ import { Summary } from './components/Summary';
 import { TableView } from './components/TableView';
 import { CalendarView } from './components/CalendarView';
 import { GridView } from './components/GridView';
-import network from './lib/network.json';
-import { networkLinks } from './lib/network.mjs';
 import { searchStep, trackSearch } from './lib/track.mjs';
 
 // 지도 라이브러리(maplibre)는 필요할 때만 불러온다
@@ -302,24 +300,8 @@ export default function App() {
           </>
         )}
         <footer>
-          <nav className="netband" aria-label="운영자의 다른 서비스">
-            <div className="netband-in">
-              <h2>운영자의 다른 서비스</h2>
-              <ul>
-                {networkLinks(network).map((s) => (
-                  <li key={s.url}>
-                    <a href={s.href} target="_blank" rel="noopener">
-                      <span className="nb-i" aria-hidden="true">{s.icon}</span>
-                      <span className="nb-t">
-                        <b>{s.name}</b>
-                        <span>{s.desc}</span>
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </nav>
+          <p className="netlink"><a href="/network">운영자의 다른 서비스</a></p>
+
           <p>
             숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 주기적으로 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다.
             국립자연휴양림관리소 및 각 지자체와 제휴하지 않았습니다.

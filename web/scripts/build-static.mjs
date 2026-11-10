@@ -15,6 +15,7 @@ import { networkLinks } from '../src/lib/network.mjs';
 import { buildLlmsTxt } from './llms.mjs';
 import { loadHistory, trendSection } from './trend.mjs';
 import { computeStats, historySeries, insightsBody } from './insights.mjs';
+import { detailSection } from './forest-detail.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(WEB, 'dist');
@@ -263,10 +264,9 @@ ${ALERT_JS}
 <main>
 ${body}
 </main>
-${networkBand}
 <footer>
   <p>숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 약 3시간마다 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 실제 예약 가능 여부는 수집 이후 바뀌었을 수 있으니 예약·결제는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요.</p>
-  <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/about">소개</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a></nav>
+  <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/about">소개</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a><a href="/network">운영자의 다른 서비스</a></nav>
   <p class="biz"><b>사업자 정보</b> · 대표: 홍지혜(넥스트웨이브) · 사업자등록번호: 311-11-67514</p>
 </footer>
 <script src="https://ddalkkakrank.kr/feedback.js" defer data-color="#0b6e4f"></script>
@@ -279,6 +279,17 @@ const write = (rel, html) => {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, html);
 };
+// ---- 2-1. /network: 운영자의 다른 서비스 목록 (이슈 #25, 광고 연결 페이지에서 띠를 빼고 여기로 분리) ----
+{
+  const html = page({
+    urlPath: '/network',
+    title: '운영자의 다른 서비스 · 숲가자',
+    description: '숲가자를 운영하는 넥스트웨이브가 만든 다른 서비스 목록입니다.',
+    body: `<h1>운영자의 다른 서비스</h1>
+<p class="lead">숲가자는 넥스트웨이브가 운영합니다. 같은 운영자가 만든 다른 서비스입니다.</p>`,
+  }).replace('</main>', '</main>\n' + networkBand).replace('<meta name="viewport"', '<meta name="robots" content="noindex,follow" />\n<meta name="viewport"');
+  write('network', html);
+}
 const stampLine = `<p class="stamp">마지막 갱신 ${esc(kstTime)} · 출처 숲나들e 월별 예약현황 · 1박 체크인 기준, 약 3시간마다 갱신</p>`;
 
 // ---- 3. 휴양림별 페이지 ----
@@ -292,6 +303,8 @@ for (const c of changes) {
   recentByForest.get(c.forest).push({ ...c, g: x.g, iso: isoOf(c.date) });
 }
 
+// 시설 안내 구역(이슈 #22)은 상위 30곳에만 붙인다(src/lib/top-forests.json). 표본 검수 통과 전 전체 공개 금지.
+const TOP = new Set(JSON.parse(fs.readFileSync(path.join(WEB, 'src/lib/top-forests.json'), 'utf8')).forests.map((x) => x.id));
 const forestUrl = (f) => `/forest/${encodeURIComponent(f.id)}`;
 const urls = [];
 for (const f of status.forests) {
@@ -349,6 +362,7 @@ ${recent.length ? `<h2>최근 새로 빈 자리 <span class="fsub">(최근 72시
 <h2>날짜별 빈자리 <span class="fsub">(체크인 날짜 기준 1박, 빨간 날짜는 주말·연휴 숙박)</span></h2>
 ${dates.length ? `<table><thead><tr><th>체크인</th>${kinds.map((k) => `<th>${kindName(k)} 예약가능</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
 ${dates.length > 60 ? `<p class="fsub">외 ${dates.length - 60}일 더 있음 — <a href="/?forest=${encodeURIComponent(f.id)}">전체 보기</a></p>` : ''}` : '<p class="note">지금은 숲나들e에 예약가능으로 표시된 날짜가 없습니다. 취소가 나오면 알림으로 받아 보세요.</p>'}
+${TOP.has(f.id) ? detailSection(f, generatedAt) : ''}
 ${nearby.length ? `<h2>${esc(reg?.name || f.sidoName)}의 다른 휴양림</h2><ul class="flist">${nearby.map(({ x, n }) => `<li><a href="${forestUrl(x)}">${esc(x.name)}</a><div class="fsub">${esc(x.sigungu)} · 빈자리 ${n}일</div></li>`).join('')}</ul>` : ''}
 `;
   const ld = [{
@@ -443,7 +457,7 @@ ${list.slice(0, 80).map(({ f, byDate }) => `<tr><td><a href="${forestUrl(f)}"><b
   const html = fs.readFileSync(file, 'utf8');
   const strip = (x) => x.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
   const qa = [...html.matchAll(/<details class="item"><summary>([\s\S]*?)<\/summary><div class="a">([\s\S]*?)<\/div><\/details>/g)]
-    .map(([, q, a]) => ({ '@type': 'Question', name: strip(q), acceptedAnswer: { '@type': 'Answer', text: strip(a) } }));
+    .map(([, q, a]) => ({ '@type': 'Question', name: strip(q), acceptedAnswer: { '@type': 'Answer', text: strip(a.replace(/<p class="src">[\s\S]*?<\/p>/g, '')) } }));
   const ld = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa };
   fs.writeFileSync(file, html.replace('<!--FAQ_JSONLD-->', `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`));
   console.log(`FAQPage 질문 ${qa.length}개`);
@@ -468,7 +482,7 @@ ${list.slice(0, 80).map(({ f, byDate }) => `<tr><td><a href="${forestUrl(f)}"><b
 <p>바로 가기: <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a> · <a href="/vacancy/all/next-weekend/">다음 주말 빈자리</a> · <a href="/forest/">휴양림 전체 목록</a></p>
 <h2 style="font-size:18px;color:#1d2420">지역별 휴양림</h2>
 ${regionLists}
-<p style="margin-top:28px;padding-top:12px;border-top:1px solid #e2e0d6;font-size:13px;color:#646e68"><a href="/about">소개</a> · <a href="/privacy">개인정보처리방침</a> · <a href="/terms">이용약관</a></p>
+<p style="margin-top:28px;padding-top:12px;border-top:1px solid #e2e0d6;font-size:13px;color:#646e68"><a href="/about">소개</a> · <a href="/privacy">개인정보처리방침</a> · <a href="/terms">이용약관</a> · <a href="/network">운영자의 다른 서비스</a></p>
 <p style="font-size:13px;color:#646e68"><b>사업자 정보</b> · 대표: 홍지혜(넥스트웨이브) · 사업자등록번호: 311-11-67514</p>
 </section>`;
   const idx = path.join(DIST, 'index.html');
