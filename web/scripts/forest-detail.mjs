@@ -43,31 +43,36 @@ const allPrices = (gs) => priced(gs).flatMap((g) => g.pr.filter((p) => p > 0));
  */
 export function uniqueParagraph(f) {
   const { kinds, byKind } = forestFacts(f);
-  const where = f.addr || `${f.sidoName} ${f.sigungu}`;
+  // 주소 끝에 휴양림 이름이 이미 있으면 떼어 이름이 두 번 나오지 않게 한다.
+  const rawAddr = f.addr || `${f.sidoName} ${f.sigungu}`;
+  const where = rawAddr.endsWith(` ${f.name}`) ? rawAddr.slice(0, -f.name.length - 1) : rawAddr;
   const parts = [];
   parts.push(`${f.name}${josa(f.name, '은', '는')} ${where}에 있는 ${f.type} 자연휴양림입니다.`);
-  for (const k of kinds) {
+  kinds.forEach((k, ki) => {
     const { gs, classes } = byKind[k];
     const cls = [...classes].sort((a, b) => b[1].length - a[1].length).map(([c, xs]) => `${c} ${xs.length}${UNIT[k]}`);
     const shown = cls.slice(0, 4).join(', ') + (cls.length > 4 ? ` 등 ${cls.length}가지 유형` : '');
-    let s = `숲가자가 수집한 ${KIND_NAME[k]}${k === '01' ? '는' : '은'} ${gs.length}${UNIT[k]}(${shown}) 기준이며 숲나들e 공개 화면과 다를 수 있습니다.`;
+    // 숲나들e 공개 화면과 다를 수 있다는 단서는 문단에 한 번만 붙인다.
+    let s = ki === 0
+      ? `숲가자가 수집한 ${KIND_NAME[k]}${k === '01' ? '는' : '은'} ${gs.length}${UNIT[k]}(${shown}) 기준이며 숲나들e 공개 화면과 다를 수 있습니다.`
+      : `${KIND_NAME[k]}${k === '01' ? '는' : '은'} ${gs.length}${UNIT[k]}(${shown})입니다.`;
     const top = [...classes].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ko'))[0];
-    if (classes.size > 1) { const tp = allPrices(top[1]); s += ` 가장 많은 유형은 ${top[0]}${josa(top[0], "으로", "로")} 전체의 ${Math.round((top[1].length / gs.length) * 100)}%${tp.length ? `이고 1박 요금은 ${range(tp, won)}입니다` : '입니다'}.`; }
-    const caps = gs.map((g) => g.cap).filter((n) => n > 0);
-    if (caps.length) s += ` 수용 인원은 ${range(caps, (n) => n, '인')}`;
-    const areas = gs.map((g) => areaNum(g.area)).filter((n) => n);
-    s += caps.length ? (areas.length ? `, 면적은 ${range(areas, (n) => n, '㎡')}입니다.` : '입니다.') : (areas.length ? ` 면적은 ${range(areas, (n) => n, '㎡')}입니다.` : '');
-    const biggest = [...gs].filter((g) => g.cap > 0).sort((a, b) => b.cap - a.cap || a.name.localeCompare(b.name, 'ko'))[0];
-    if (biggest && caps.length > 1 && Math.min(...caps) !== biggest.cap) s += ` 가장 큰 곳은 ${biggest.cls} ‘${biggest.name}’(${biggest.cap}인${areaNum(biggest.area) > 0 ? `, ${biggest.area}` : ''})입니다.`;
+    if (classes.size > 1) s += ` 가장 많은 유형은 ${top[0]}${josa(top[0], '으로', '로')} 전체의 ${Math.round((top[1].length / gs.length) * 100)}%입니다.`;
+    // 가장 작은 곳·가장 큰 곳을 이름으로 짚어 곳마다 다른 문장을 만든다.
+    const withCap = gs.filter((g) => g.cap > 0);
+    const byCap = [...withCap].sort((a, b) => a.cap - b.cap || a.name.localeCompare(b.name, 'ko'));
+    const small = byCap[0], biggest = byCap[byCap.length - 1];
+    const desc = (g) => `${g.cls} ‘${g.name}’(${g.cap}인${areaNum(g.area) > 0 ? `, ${g.area}` : ''})`;
+    if (withCap.length > 1 && small.cap !== biggest.cap) s += ` 가장 작은 곳은 ${desc(small)}, 가장 큰 곳은 ${desc(biggest)}입니다.`;
     const ps = allPrices(gs);
     if (ps.length) {
       const cheapest = [...priced(gs)].sort((a, b) => Math.min(...a.pr.filter((p) => p > 0)) - Math.min(...b.pr.filter((p) => p > 0)) || a.name.localeCompare(b.name, 'ko'))[0];
       const lo = Math.min(...ps), hi = Math.max(...ps);
-      const cheapName = `${cheapest.cls} ‘${cheapest.name}’(${won(Math.min(...cheapest.pr.filter((p) => p > 0)))})`;
-      s += lo === hi ? ` 1박 요금은 ${won(lo)}이고, 예로 ${cheapName}입니다.` : ` 1박 요금은 ${won(lo)}에서 ${won(hi)} 사이이고, 가장 낮은 곳은 ${cheapName}입니다.`;
+      const cheapName = `${cheapest.cls} ‘${cheapest.name}’`;
+      s += lo === hi ? ` 1박 요금은 ${won(lo)}이고, 예로 ${cheapName}이 있습니다.` : ` 1박 요금은 ${won(lo)}에서 ${won(hi)} 사이이며, 가장 낮은 ${won(lo)}은 ${cheapName}입니다.`;
     }
     parts.push(s);
-  }
+  });
   return parts.join(' ');
 }
 
@@ -75,12 +80,13 @@ export function uniqueParagraph(f) {
 export function usageTips(f) {
   const { kinds, byKind, goods } = forestFacts(f);
   const tips = [];
-  if (f.checkin || f.checkout) tips.push(`입실 ${f.checkin || '확인 필요'}, 퇴실 ${f.checkout || '확인 필요'}로 안내돼 있습니다.`);
+  const stay = [];
   for (const k of kinds) {
-    const gs = byKind[k].gs;
-    const nights = gs.map((g) => g.maxNights).filter((n) => n > 0);
-    if (nights.length) tips.push(`${KIND_NAME[k]}${k === '01' ? '는' : '은'} 한 번에 ${range(nights, (n) => n, '박')}까지 예약할 수 있습니다.`);
+    const nights = byKind[k].gs.map((g) => g.maxNights).filter((n) => n > 0);
+    if (nights.length) stay.push(`${KIND_NAME[k]} ${range(nights, (n) => n, '박')}`);
   }
+  if (f.checkin || f.checkout) tips.push(`입실 ${f.checkin || '확인 필요'}, 퇴실 ${f.checkout || '확인 필요'}로 안내돼 있습니다${stay.length ? `. 한 번에 예약할 수 있는 기간은 ${stay.join(', ')}까지입니다` : ''}.`);
+  else if (stay.length) tips.push(`한 번에 예약할 수 있는 기간은 ${stay.join(', ')}까지입니다.`);
   const total = goods.length;
   const parts = [];
   for (const [fl, label] of Object.entries(FLAG_LABELS)) {

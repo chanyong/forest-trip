@@ -72,7 +72,7 @@ test('문구: 단정 금지, 구역 안에 비공식·출처·확인일, 0㎡·�
   }
 });
 
-test('반복 문장: 이름·숫자를 가린 문장 중복률이 기준(0.7) 이하', () => {
+test('반복 문장: 이름·숫자를 가린 문장 중복률이 기준(0.6) 이하', () => {
   const sents = top.forests.filter((x) => x.sample).flatMap((x) => {
     const f = byId.get(x.id);
     return (uniqueParagraph(f) + ' ' + usageTips(f).join(' ')).split(/(?<=[.다])\s+/)
@@ -80,5 +80,5 @@ test('반복 문장: 이름·숫자를 가린 문장 중복률이 기준(0.7) �
   });
   const rate = 1 - new Set(sents).size / sents.length;
   console.log("문장 중복률", rate.toFixed(3));
-  assert.ok(rate <= 0.7, `중복률 ${rate.toFixed(3)}`);
+  assert.ok(rate <= 0.6, `중복률 ${rate.toFixed(3)}`);
 });
