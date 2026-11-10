@@ -2,7 +2,7 @@
 // 수집된 데이터(숲나들e 객실 목록·요금·정책)만으로 만든다. 외부 소개문·사진·후기는 쓰지 않는다.
 // 상위 30곳(src/lib/top-forests.json)에만 붙인다. 표본 검수 통과 전 전체 공개 금지.
 
-const FLAG_LABELS = { a: '에어컨', d: '반려견 동반', e: '전기', w: '온수', h: '장애인 시설', v: '바우처' };
+const FLAG_LABELS = { a: '에어컨', d: '반려견 동반 가능', e: '전기', w: '온수', h: '장애인 시설', v: '바우처' };
 const KIND_NAME = { '01': '숙소', '02': '야영장' };
 const UNIT = { '01': '실', '02': '곳' };
 
@@ -50,17 +50,21 @@ export function uniqueParagraph(f) {
     const { gs, classes } = byKind[k];
     const cls = [...classes].sort((a, b) => b[1].length - a[1].length).map(([c, xs]) => `${c} ${xs.length}${UNIT[k]}`);
     const shown = cls.slice(0, 4).join(', ') + (cls.length > 4 ? ` 등 ${cls.length}가지 유형` : '');
-    let s = `숲나들e에 등록된 ${KIND_NAME[k]}${k === '01' ? '는' : '은'} 모두 ${gs.length}${UNIT[k]}(${shown})입니다.`;
+    let s = `숲가자가 수집한 ${KIND_NAME[k]}${k === '01' ? '는' : '은'} ${gs.length}${UNIT[k]}(${shown}) 기준이며 숲나들e 공개 화면과 다를 수 있습니다.`;
+    const top = [...classes].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ko'))[0];
+    if (classes.size > 1) { const tp = allPrices(top[1]); s += ` 가장 많은 유형은 ${top[0]}${josa(top[0], "으로", "로")} 전체의 ${Math.round((top[1].length / gs.length) * 100)}%${tp.length ? `이고 1박 요금은 ${range(tp, won)}입니다` : '입니다'}.`; }
     const caps = gs.map((g) => g.cap).filter((n) => n > 0);
     if (caps.length) s += ` 수용 인원은 ${range(caps, (n) => n, '인')}`;
     const areas = gs.map((g) => areaNum(g.area)).filter((n) => n);
     s += caps.length ? (areas.length ? `, 면적은 ${range(areas, (n) => n, '㎡')}입니다.` : '입니다.') : (areas.length ? ` 면적은 ${range(areas, (n) => n, '㎡')}입니다.` : '');
     const biggest = [...gs].filter((g) => g.cap > 0).sort((a, b) => b.cap - a.cap || a.name.localeCompare(b.name, 'ko'))[0];
-    if (biggest && caps.length > 1 && Math.min(...caps) !== biggest.cap) s += ` 가장 큰 곳은 ${biggest.cls} ‘${biggest.name}’(${biggest.cap}인${biggest.area ? `, ${biggest.area}` : ''})입니다.`;
+    if (biggest && caps.length > 1 && Math.min(...caps) !== biggest.cap) s += ` 가장 큰 곳은 ${biggest.cls} ‘${biggest.name}’(${biggest.cap}인${areaNum(biggest.area) > 0 ? `, ${biggest.area}` : ''})입니다.`;
     const ps = allPrices(gs);
     if (ps.length) {
       const cheapest = [...priced(gs)].sort((a, b) => Math.min(...a.pr.filter((p) => p > 0)) - Math.min(...b.pr.filter((p) => p > 0)) || a.name.localeCompare(b.name, 'ko'))[0];
-      s += ` 1박 요금은 ${range(ps, won)} 사이이고, 가장 낮은 곳은 ${cheapest.cls} ‘${cheapest.name}’(${won(Math.min(...cheapest.pr.filter((p) => p > 0)))})입니다.`;
+      const lo = Math.min(...ps), hi = Math.max(...ps);
+      const cheapName = `${cheapest.cls} ‘${cheapest.name}’(${won(Math.min(...cheapest.pr.filter((p) => p > 0)))})`;
+      s += lo === hi ? ` 1박 요금은 ${won(lo)}이고, 예로 ${cheapName}입니다.` : ` 1박 요금은 ${won(lo)}에서 ${won(hi)} 사이이고, 가장 낮은 곳은 ${cheapName}입니다.`;
     }
     parts.push(s);
   }
@@ -71,19 +75,19 @@ export function uniqueParagraph(f) {
 export function usageTips(f) {
   const { kinds, byKind, goods } = forestFacts(f);
   const tips = [];
-  if (f.checkin || f.checkout) tips.push(`입실 ${f.checkin || '확인 필요'}, 퇴실 ${f.checkout || '확인 필요'}(으)로 등록돼 있습니다. 시설·날짜에 따라 다를 수 있습니다.`);
+  if (f.checkin || f.checkout) tips.push(`입실 ${f.checkin || '확인 필요'}, 퇴실 ${f.checkout || '확인 필요'}로 안내돼 있습니다.`);
   for (const k of kinds) {
     const gs = byKind[k].gs;
     const nights = gs.map((g) => g.maxNights).filter((n) => n > 0);
     if (nights.length) tips.push(`${KIND_NAME[k]}${k === '01' ? '는' : '은'} 한 번에 ${range(nights, (n) => n, '박')}까지 예약할 수 있습니다.`);
   }
   const total = goods.length;
+  const parts = [];
   for (const [fl, label] of Object.entries(FLAG_LABELS)) {
     const n = goods.filter((g) => (g.flags || '').includes(fl)).length;
-    if (!n) continue;
-    if (n === total) tips.push(`등록된 객실·사이트 ${total}개 모두 ${label} 표시가 있습니다.`);
-    else tips.push(`${label} 표시가 있는 객실·사이트는 ${total}개 중 ${n}개입니다. 객실별 표시는 숲나들e에서 확인하세요.`);
+    if (n) parts.push(n === total ? `${label} 전체 ${n}개` : `${label} ${n}개`);
   }
+  if (parts.length) tips.push(`수집한 객실·사이트 ${total}개 중 편의 표시가 있는 곳은 ${parts.join(', ')}입니다.`);
   return tips;
 }
 
@@ -113,5 +117,5 @@ export function detailSection(f, generatedAt) {
 <p>${esc(uniqueParagraph(f))}</p>
 ${classTable(f)}
 ${tips.length ? `<h3 style="font-size:1rem;margin:20px 0 6px">이용 전 확인할 점</h3><ul>${tips.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
-<p class="fsub">출처: 숲나들e에 공개된 객실 목록·요금표·예약정책. 확인일 ${day}(수집일). 요금은 비수기·성수기, 평일·주말 4가지 중 등록된 값의 최저~최고이며 실제 결제 금액은 숲나들e에서 확인하세요. 위 내용은 수집 데이터를 정리한 것이고 외부 소개문·사진은 쓰지 않았습니다.</p></section>`;
+<p class="fsub">출처: 숲나들e에 공개된 객실 목록·요금표·예약정책. 확인일 ${day}(수집일). 요금은 비수기·성수기, 평일·주말 4가지 중 등록된 값의 최저~최고이며 실제 결제 금액은 숲나들e에서 확인하세요. 이 사이트는 숲나들e와 무관한 비공식 안내이며, 위 내용은 수집 데이터를 정리한 것으로 숲가자가 수집한 객실·사이트 기준이라 수련장·강의실 등 일부 시설이 빠졌을 수 있고, 시설·날짜에 따라 입퇴실 시각과 객실별 표시가 다를 수 있습니다. 외부 소개문·사진은 쓰지 않았습니다.</p></section>`;
 }

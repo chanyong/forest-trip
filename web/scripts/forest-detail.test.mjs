@@ -55,3 +55,30 @@ test('build-static.mjs: 상위 30곳에만 시설 안내를 붙인다', () => {
   assert.ok(s.includes('TOP.has(f.id) ? detailSection(f, generatedAt)'));
   assert.ok(existsSync(new URL('../src/lib/top-forests.json', import.meta.url)));
 });
+
+test('문구: 단정 금지, 구역 안에 비공식·출처·확인일, 0㎡·단일 요금·조사 오류 없음', () => {
+  for (const x of top.forests) {
+    const f = byId.get(x.id);
+    const html = detailSection(f, status.generatedAt);
+    const t = uniqueParagraph(f) + usageTips(f).join(' ');
+    assert.doesNotMatch(t, /등록된 (숙소|야영장)[는은] 모두/, f.name);
+    assert.match(html, /비공식/);
+    assert.match(html, /출처: 숲나들e/);
+    assert.match(html, /확인일 \d{4}-\d{2}-\d{2}/);
+    assert.doesNotMatch(t, /\b0㎡/, f.name);
+    assert.doesNotMatch(t, /\(으\)로/);
+    assert.doesNotMatch(t, /반려견 동반 표시/);
+    for (const m of t.matchAll(/1박 요금은 (\S+)에서 (\S+) 사이/g)) assert.notEqual(m[1], m[2], f.name);
+  }
+});
+
+test('반복 문장: 이름·숫자를 가린 문장 중복률이 기준(0.7) 이하', () => {
+  const sents = top.forests.filter((x) => x.sample).flatMap((x) => {
+    const f = byId.get(x.id);
+    return (uniqueParagraph(f) + ' ' + usageTips(f).join(' ')).split(/(?<=[.다])\s+/)
+      .map((s) => s.replace(/‘[^’]*’/g, '').replace(/[\d.,~]+/g, '#').replace(/^\S*(휴양림|랜드|파크)\S*/, '').trim());
+  });
+  const rate = 1 - new Set(sents).size / sents.length;
+  console.log("문장 중복률", rate.toFixed(3));
+  assert.ok(rate <= 0.7, `중복률 ${rate.toFixed(3)}`);
+});
