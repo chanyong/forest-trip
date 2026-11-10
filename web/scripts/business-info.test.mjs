@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 const files = [
   'src/App.tsx',
   'scripts/build-static.mjs',
+  'public/about.html',
   'public/faq.html',
   'public/privacy.html',
   'public/terms.html',
