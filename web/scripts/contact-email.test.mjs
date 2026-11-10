@@ -1,5 +1,5 @@
 // 화면·구조화 데이터에 보이는 문의 이메일이 공통 주소로 통일됐는지 검사 (이슈 #6). 실행: npm test
-// 대표 결정(2026-11-02): 사이트에 보이는 문의 이메일은 모두 1bangkr.info@gmail.com
+// 대표 결정(2026-11-02): 사이트에 보이는 문의 이메일은 모두 supgaja@gmail.com
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel) => fs.readFileSync(path.join(WEB, rel), 'utf8');
-const CONTACT = '1bangkr.info@gmail.com';
+const CONTACT = 'supgaja@gmail.com';
 
 // 빌드 결과로 나가는 원본: index.html, src/, public/(data 제외), 정적 페이지 생성 스크립트
 function shippedFiles() {
@@ -30,6 +30,11 @@ function shippedFiles() {
 
 test('화면에 나가는 파일에 예전 문의 주소(cyjung@gmail.com)가 없다', () => {
   const hits = shippedFiles().filter((f) => read(f).includes('cyjung@gmail.com'));
+  assert.deepEqual(hits, []);
+});
+
+test('화면에 나가는 파일에 옛 문의 주소(1bangkr)가 없다 (이슈 #20)', () => {
+  const hits = shippedFiles().filter((f) => read(f).includes('1bangkr'));
   assert.deepEqual(hits, []);
 });
 
