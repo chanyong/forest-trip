@@ -119,6 +119,14 @@
       "destination": "/forest/:id/index.html"
     },
     {
+      "source": "/season/:s",
+      "destination": "/season/:s/index.html"
+    },
+    {
+      "source": "/hub/:h",
+      "destination": "/hub/:h/index.html"
+    },
+    {
       "source": "/vacancy/:r",
       "destination": "/vacancy/:r/index.html"
     },

@@ -5,6 +5,8 @@
 //   dist/forest/index.html         휴양림 전체 목록
 //   dist/forest/<id>/index.html    휴양림별 빈자리 페이지(검색 유입용)
 //   dist/vacancy/<지역>/[<시기>/]index.html  지역·시기 랜딩(이번 주말 경기 휴양림 빈자리 등)
+//   dist/season/<시즌>/index.html  계절 큐레이션 랜딩(노출 구간 안일 때만, 이슈 #36)
+//   dist/hub/<허브>/index.html     수도권·아이와 함께·야영장 유형별 허브(이슈 #36)
 //   dist/sitemap.xml               위 페이지 포함
 //   dist/llms.txt                  AI 검색용 요약(무엇을·어디서·얼마나 자주, 주요 페이지, 지역별 빈자리 수)
 import fs from 'node:fs';
@@ -16,6 +18,7 @@ import { buildLlmsTxt } from './llms.mjs';
 import { loadHistory, trendSection } from './trend.mjs';
 import { computeStats, historySeries, insightsBody } from './insights.mjs';
 import { detailSection } from './forest-detail.mjs';
+import { buildCuration } from './curation.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(WEB, 'dist');
@@ -292,6 +295,14 @@ const write = (rel, html) => {
 }
 const stampLine = `<p class="stamp">마지막 갱신 ${esc(kstTime)} · 출처 숲나들e 월별 예약현황 · 1박 체크인 기준, 약 3시간마다 갱신</p>`;
 
+// ---- 2-2. 시즌 랜딩·허브 (이슈 #36): 페이지 내용은 curation.mjs, 여기서는 틀(page)에 끼워 쓴다 ----
+const forestUrl = (f) => `/forest/${encodeURIComponent(f.id)}`;
+const cur = buildCuration({
+  status, start, first, SITE, esc, kstTime, alertAttr, forestUrl,
+  todayISO: generatedKST.slice(0, 10), mdw, md, dateOf: (i) => addDays(start, i), isWeekendStay,
+  regionName: (c) => REGIONS.find((r) => r.code === c)?.name,
+});
+
 // ---- 3. 휴양림별 페이지 ----
 const recentByForest = new Map(); // 최근 72시간 안에 새로 열린(취소 등) 자리 중 지금도 비어 있는 것
 for (const c of changes) {
@@ -305,7 +316,6 @@ for (const c of changes) {
 
 // 시설 안내 구역(이슈 #22)은 상위 30곳에만 붙인다(src/lib/top-forests.json). 표본 검수 통과 전 전체 공개 금지.
 const TOP = new Set(JSON.parse(fs.readFileSync(path.join(WEB, 'src/lib/top-forests.json'), 'utf8')).forests.map((x) => x.id));
-const forestUrl = (f) => `/forest/${encodeURIComponent(f.id)}`;
 const urls = [];
 for (const f of status.forests) {
   const reg = regionOf(f);
@@ -364,6 +374,7 @@ ${dates.length ? `<table><thead><tr><th>체크인</th>${kinds.map((k) => `<th>${
 ${dates.length > 60 ? `<p class="fsub">외 ${dates.length - 60}일 더 있음 — <a href="/?forest=${encodeURIComponent(f.id)}">전체 보기</a></p>` : ''}` : '<p class="note">지금은 숲나들e에 예약가능으로 표시된 날짜가 없습니다. 취소가 나오면 알림으로 받아 보세요.</p>'}
 ${TOP.has(f.id) ? detailSection(f, generatedAt) : ''}
 ${nearby.length ? `<h2>${esc(reg?.name || f.sidoName)}의 다른 휴양림</h2><ul class="flist">${nearby.map(({ x, n }) => `<li><a href="${forestUrl(x)}">${esc(x.name)}</a><div class="fsub">${esc(x.sigungu)} · 빈자리 ${n}일</div></li>`).join('')}</ul>` : ''}
+${cur.relatedHtml(f)}
 `;
   const ld = [{
     '@context': 'https://schema.org', '@type': 'LodgingBusiness', name: f.name, url: f.url || SITE + forestUrl(f),
@@ -389,6 +400,7 @@ ${nearby.length ? `<h2>${esc(reg?.name || f.sidoName)}의 다른 휴양림</h2><
 <h1>전국 자연휴양림 ${status.forests.length}곳 빈자리 현황</h1>
 <p class="lead">숲나들e에서 예약을 받는 국립·공립·사립 자연휴양림을 지역별로 모았습니다. 휴양림을 누르면 날짜별 빈자리와 예약 오픈 일정을 볼 수 있습니다.</p>
 ${stampLine}
+${cur.chipNav('')}
 ${REGIONS.map((r) => {
     const fs_ = status.forests.filter((f) => f.sido === r.code).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     if (!fs_.length) return '';
@@ -437,6 +449,7 @@ for (const r of [ALL, ...REGIONS]) {
 ${stampLine}
 <nav class="chips" aria-label="시기" style="margin-top:14px">${PERIODS.filter((q) => r !== ALL || q.slug).map((q) => `<a href="/vacancy/${r.slug}/${q.slug ? q.slug + '/' : ''}"${q === p ? ' aria-current="page"' : ''}>${q.slug ? q.name : '전체 기간'}</a>`).join('')}</nav>
 <nav class="chips" aria-label="지역" style="margin-top:8px">${[ALL, ...REGIONS].filter((x) => x !== ALL || p.slug).map((x) => `<a href="/vacancy/${x.slug}/${p.slug ? p.slug + '/' : ''}"${x === r ? ' aria-current="page"' : ''}>${esc(x.name)}</a>`).join('')}</nav>
+${cur.chipNav('')}
 <div class="actions">
   <a class="btn primary" href="/?${esc(appQs)}">조건 그대로 숲가자에서 보기</a>
   <button type="button" class="btn alert" data-alert="${alertAttr({ label: `${r.name} 휴양림${p.slug ? ` · ${md(p.from)}~${md(p.to)} 주말` : ''} 빈자리`, filters: alertFilters })}">🔔 빈자리 알림 받기</button>
@@ -480,6 +493,7 @@ ${list.slice(0, 80).map(({ f, byDate }) => `<tr><td><a href="${forestUrl(f)}"><b
 <h2 style="font-size:18px;color:#1d2420">이용 방법</h2>
 <ol style="padding-left:20px"><li>지역과 기간(예: 이번 주말)을 고릅니다.</li><li>숙소와 야영장 중 원하는 것과 인원을 정합니다.</li><li>목록·지도·달력·월간 그리드로 빈자리를 확인하고, 예약은 숲나들e에서 합니다.</li></ol>
 <p>바로 가기: <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a> · <a href="/vacancy/all/next-weekend/">다음 주말 빈자리</a> · <a href="/forest/">휴양림 전체 목록</a></p>
+${cur.pages.length ? `<p>시즌·테마 모음: ${cur.pages.map((p) => `<a href="${p.urlPath}">${esc(p.name)}</a>`).join(' · ')}</p>` : ''}
 <h2 style="font-size:18px;color:#1d2420">지역별 휴양림</h2>
 ${regionLists}
 <p style="margin-top:28px;padding-top:12px;border-top:1px solid #e2e0d6;font-size:13px;color:#646e68"><a href="/about">소개</a> · <a href="/privacy">개인정보처리방침</a> · <a href="/terms">이용약관</a> · <a href="/network">운영자의 다른 서비스</a></p>
@@ -507,6 +521,13 @@ ${regionLists}
   }));
 }
 
+// ---- 6-3. 시즌 랜딩·허브 쓰기 (이슈 #36) ----
+const curUrls = [];
+for (const p of cur.pages) {
+  write(p.urlPath.slice(1, -1), page({ urlPath: p.urlPath, title: p.title, description: p.description, body: p.body, jsonld: p.jsonld }));
+  curUrls.push({ loc: p.urlPath, freq: p.freq, pri: p.pri });
+}
+
 // ---- 7. sitemap ----
 const today = generatedKST.slice(0, 10);
 const fixed = [
@@ -522,7 +543,7 @@ const fixed = [
 ];
 const sm = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${[...fixed, ...urls].map((u) => `  <url><loc>${esc(SITE + u.loc)}</loc>${u.freq === 'yearly' || u.freq === 'monthly' ? '' : `<lastmod>${today}</lastmod>`}<changefreq>${u.freq}</changefreq><priority>${u.pri}</priority></url>`).join('\n')}
+${[...fixed, ...urls, ...curUrls].map((u) => `  <url><loc>${esc(SITE + u.loc)}</loc>${u.freq === 'yearly' || u.freq === 'monthly' ? '' : `<lastmod>${today}</lastmod>`}<changefreq>${u.freq}</changefreq><priority>${u.pri}</priority></url>`).join('\n')}
 </urlset>
 `;
 fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sm);
@@ -543,10 +564,11 @@ fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sm);
       return { name: r.name, code: r.code, slug: r.slug, forests: fs_.length, open: fs_.filter((f) => openDays(f) > 0).length,
         thisWeekend: landingCount.get(`${r.slug}:this-weekend`) ?? 0, nextWeekend: landingCount.get(`${r.slug}:next-weekend`) ?? 0 };
     }),
+    guides: cur.pages.map((p) => ({ name: p.name, path: p.urlPath, desc: p.description })),
     nation: { thisWeekend: landingCount.get('all:this-weekend') ?? 0, nextWeekend: landingCount.get('all:next-weekend') ?? 0 },
   });
   fs.writeFileSync(path.join(DIST, 'llms.txt'), llms);
 }
 
 const kb = (f) => (fs.statSync(path.join(DIST, f)).size / 1024).toFixed(0) + 'KB';
-console.log(`정적 생성: 알림 피드 ${feedItems.length}건(${kb('alerts-feed.json')}) · 휴양림 페이지 ${status.forests.length} · 랜딩 ${urls.length - status.forests.length - 1} · sitemap ${fixed.length + urls.length}개 URL · llms.txt ${kb('llms.txt')}`);
+console.log(`정적 생성: 알림 피드 ${feedItems.length}건(${kb('alerts-feed.json')}) · 휴양림 페이지 ${status.forests.length} · 랜딩 ${urls.length - status.forests.length - 1} · 시즌·허브 ${curUrls.length} · sitemap ${fixed.length + urls.length + curUrls.length}개 URL · llms.txt ${kb('llms.txt')}`);

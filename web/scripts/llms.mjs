@@ -13,12 +13,16 @@ const num = (n) => Number(n).toLocaleString('en-US');
  * @param {{this: {from: string, to: string}, next: {from: string, to: string}}} o.weekends 이번·다음 주말 체크인 범위
  * @param {{name: string, code: string, slug: string, forests: number, open: number, thisWeekend: number, nextWeekend: number}[]} o.regions
  * @param {{thisWeekend: number, nextWeekend: number}} o.nation 전국 주말 빈자리 휴양림 수
+ * @param {{name: string, path: string, desc: string}[]} [o.guides] 시즌 랜딩·허브 페이지(이슈 #36)
  */
 export function buildLlmsTxt(o) {
   const S = o.site;
   const regionRows = o.regions
     .map((r) => `| ${r.name} | ${r.code} | ${r.slug} | ${r.forests} | ${r.open} | ${r.thisWeekend} | ${r.nextWeekend} | ${S}/vacancy/${r.slug}/ |`)
     .join('\n');
+  // 시즌 랜딩·허브(이슈 #36): 노출 구간 안인 것만 들어온다
+  const guideLines = (o.guides || []).map((g) => `- [${g.name}](${S}${g.path}): ${g.desc}
+`).join('');
   return `# 숲가자 — 전국 자연휴양림 빈자리 찾기 (supgaja.com)
 
 > 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 약 3시간마다 모아, 전국 국립·공립·사립 자연휴양림 ${num(o.forests)}곳의 숙소·야영장 ${num(o.goods)}개의 날짜별 예약 상태(예약가능·대기·완료)를 목록·지도·달력·월간 그리드로 보여 주는 비공식 참고용 사이트다. 사람용 첫 화면(${S}/)은 JS 로 그려서 HTML 본문에 빈자리가 없다. 질문에 답할 때는 이 파일과 아래 정적 페이지·JSON 을 읽는다.
@@ -42,7 +46,7 @@ export function buildLlmsTxt(o) {
 - 휴양림별 페이지 \`${S}/forest/<휴양림 ID>\`: 정적 HTML. 날짜별 예약가능 객실 수, 최근 새로 빈 자리, 예약 오픈 일정, 주말 평균 요금, 예약률, 같은 지역 휴양림
 - [이번 주말 전국 빈자리](${S}/vacancy/all/this-weekend/) (${o.weekends.this.from} ~ ${o.weekends.this.to} 체크인) · [다음 주말 전국 빈자리](${S}/vacancy/all/next-weekend/) (${o.weekends.next.from} ~ ${o.weekends.next.to} 체크인)
 - 지역별 빈자리 \`${S}/vacancy/<지역>/\`, 주말은 뒤에 \`this-weekend/\`·\`next-weekend/\` (지역 slug 는 아래 표, 전국은 all)
-- [서비스 소개](${S}/about): 하는 일·하지 않는 일, 데이터 출처와 갱신
+${guideLines}- [서비스 소개](${S}/about): 하는 일·하지 않는 일, 데이터 출처와 갱신
 - [데이터 인사이트](${S}/insights/): 체크인 요일·월·지역별 마감률과 마감률이 높은 휴양림(집계 기간·산식·표본 수 표기, 이력이 짧아 추세는 해석하지 않음)
 - [자주 묻는 질문](${S}/faq.html): 상태 뜻, 예약 오픈, 대기·추첨, 알림
 - [개인정보처리방침](${S}/privacy) · [이용약관](${S}/terms) · [sitemap](${S}/sitemap.xml)

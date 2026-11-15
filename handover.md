@@ -1,6 +1,6 @@
 # 숲가자(supgaja.com) 인수인계
 
-최종 갱신: 2026-11-10
+최종 갱신: 2026-11-15
 다음 Claude Code 세션은 이 파일을 먼저 읽고 사이트 관리를 이어 간다. 세부 기술 설명은 `README.md`에 있다.
 
 ---
@@ -60,6 +60,7 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
   - `/alerts-feed.json` 빈자리 이메일 알림 피드(아래 '빈자리 이메일 알림' 장)
   - `/forest/` 전체 목록, `/forest/<insttId>` 휴양림별 페이지 185개(날짜별 빈자리, 최근 새로 빈 자리, 예약 오픈 안내, 같은 지역 휴양림 링크, LodgingBusiness·BreadcrumbList JSON-LD)
   - `/vacancy/<지역>/`, `/vacancy/<지역>/this-weekend/`, `/vacancy/<지역>/next-weekend/` 지역·시기 랜딩 29개(지역 slug: all, gyeonggi, gangwon, chungbuk, chungnam, jeonbuk, jeonnam, gyeongbuk, gyeongnam, jeju)
+  - `/season/<시즌>/`(가을·겨울·연말연시·봄·여름 큐레이션 랜딩, 이슈 #36)와 `/hub/capital/`·`/hub/kids/`·`/hub/camping/`(수도권 근교 비교·아이와 함께·야영장 유형별 허브). 코드는 `web/scripts/curation.mjs`, 시즌 틀은 그 안의 `SEASONS` 배열(체크인 범위 from~to, 노출 구간 show, 시설 kinds, 한계 문구 limit). 노출 구간 밖이거나 수집 범위에 체크인 날짜가 없으면 페이지·sitemap·내부 링크가 모두 빠진다(수집 시각 기준이라 빌드 때마다 자동). 새 시즌은 `SEASONS`에 한 줄 추가. 반려견 허브는 공식 확인 출처가 없어 만들지 않았다
   - `/sitemap.xml`(위 페이지 포함 약 220개 URL, `public/sitemap.xml`은 대체용), `faq.html` 의 FAQPage JSON-LD(질문·답 원문에서 생성)
   - `/llms.txt` AI 검색용 요약(무엇을·어디서·얼마나 자주 모으는지, 주요 페이지·데이터 JSON 링크, 상태 코드, 지역별 빈자리 휴양림 수). 본문은 `web/scripts/llms.mjs`, 검사는 `scripts/llms.test.mjs`
 - 예약 오픈 안내(`web/src/lib/policy.mjs`, 웹·정적 생성 공용): 숲나들e 예약정책 값(WEEK=매주 rsrvtBgDt 요일(1=일), MON=매월 rsrvtBgDt 일, rsrvtBgnTm 시각, dytmCycleEstbsVal 주)으로 계산한 마지막 날이 숲나들e 가 알려 준 현재 마지막 예약일과 **맞을 때만** 규칙·다음 오픈을 보여 준다(10-29 전수 확인 185곳 중 184곳 일치, 청평(사립)만 불일치 → 마지막 날만 표시).
@@ -134,6 +135,7 @@ Aside 브라우저 (월 1회, 수동, 숲나들e 로그인 필요)
 | 11-06 | (이번 PR) | 휴양림 빈자리 추이(이슈 #15): 수집 회차마다 `collector/history.mjs`가 휴양림별 [숙소 가능 건수, 야영장 가능 건수, 숙소 예약률%, 야영장 예약률%]를 `data/history/YYYYMMDD.json`(KST 하루 1파일, 같은 날은 마지막 회차가 덮어씀, 90일 보관)에 쌓고, `crawl.yml`이 이 폴더를 함께 커밋한다. 상세 페이지(`/forest/<id>`)는 `web/scripts/trend.mjs`가 최근 4주 선 그래프(SVG)를 그린다(수집 이틀 미만이면 '쌓는 중' 안내). 수집 주기·대상은 그대로. 추이 기록이 실패해도 수집은 계속한다 |
 | 11-10 | (이번 PR) | 휴양림 상세 '시설 안내' 구역(이슈 #22): `web/scripts/forest-detail.mjs`가 수집 데이터(객실 구성·인원·면적·요금 범위·최대 연박·편의 표시)로 고유 문단·유형 표·이용 확인 사항을 만들고, 상위 30곳(`web/src/lib/top-forests.json`, 네이버 리뷰 건수순 선정, 표본 20곳 표시)에만 붙인다. 문단 유사도 점검 `web/scripts/similarity.mjs`(기준 0.5, 표본 최대 0.31). 표본 사실 검수·대표 검수 전 나머지 휴양림 공개 금지 |
 | 11-10 | (이번 PR) | 소개 페이지 `/about`(public/about.html), 홈 초기 HTML에 서비스 설명·지역별 휴양림 링크·사업자 푸터(build-static가 dist/index.html의 HOME_STATIC 자리에 채움), JSON-LD Organization을 푸터 사업자 정보와 통일(이슈 #20) |
+| 11-15 | (이번 PR) | 계절 큐레이션 랜딩 + 지역·테마 허브(이슈 #36, 네이버 광고 재심사 대비 자체 콘텐츠 2차): `/season/{autumn,winter,year-end}/`(봄·여름 틀은 시기 전 자동 노출), `/hub/capital/`(경기·서울·인천 25곳 비교표)·`/hub/kids/`(정원 4~6인 숙소 객실 기준 30곳)·`/hub/camping/`(야영장 유형 7묶음). 모든 문장·표는 수집 데이터로 계산(요금 4값은 객실 중 최저), 출처·확인일 표기, '공식' 표현·광고·네이버 별점·이미지 없음. 휴양림 상세·목록·지역 랜딩·홈에서 내부 링크, sitemap·llms.txt·CollectionPage JSON-LD 반영, FAQ 2문항 추가(상한 30→32). 테스트 `scripts/curation.test.mjs` |
 
 ### 가격순 정렬 규칙 (사용자와 합의)
 - 숙소와 야영장 요금을 섞어 비교하지 않는다.
