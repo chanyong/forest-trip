@@ -6,7 +6,7 @@
 //   dist/forest/<id>/index.html    휴양림별 빈자리 페이지(검색 유입용)
 //   dist/vacancy/<지역>/[<시기>/]index.html  지역·시기 랜딩(이번 주말 경기 휴양림 빈자리 등)
 //   dist/season/<시즌>/index.html  계절 큐레이션 랜딩(노출 구간 안일 때만, 이슈 #36)
-//   dist/hub/<허브>/index.html     수도권·아이와 함께·야영장 유형별 허브(이슈 #36)
+//   dist/hub/<허브>/index.html     수도권·가족(4~6인) 숙소 비교·야영장 유형별 허브(이슈 #36)
 //   dist/sitemap.xml               위 페이지 포함
 //   dist/llms.txt                  AI 검색용 요약(무엇을·어디서·얼마나 자주, 주요 페이지, 지역별 빈자리 수)
 import fs from 'node:fs';
@@ -268,7 +268,7 @@ ${ALERT_JS}
 ${body}
 </main>
 <footer>
-  <p>숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 약 3시간마다 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 실제 예약 가능 여부는 수집 이후 바뀌었을 수 있으니 예약·결제는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요.</p>
+  <p>숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 하루 여러 번 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 실제 예약 가능 여부는 수집 이후 바뀌었을 수 있으니 예약·결제는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요.</p>
   <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/about">소개</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a><a href="/network">운영자의 다른 서비스</a></nav>
   <p class="biz"><b>사업자 정보</b> · 대표: 홍지혜(넥스트웨이브) · 사업자등록번호: 311-11-67514</p>
 </footer>
@@ -293,7 +293,7 @@ const write = (rel, html) => {
   }).replace('</main>', '</main>\n' + networkBand).replace('<meta name="viewport"', '<meta name="robots" content="noindex,follow" />\n<meta name="viewport"');
   write('network', html);
 }
-const stampLine = `<p class="stamp">마지막 갱신 ${esc(kstTime)} · 출처 숲나들e 월별 예약현황 · 1박 체크인 기준, 약 3시간마다 갱신</p>`;
+const stampLine = `<p class="stamp">마지막 갱신 ${esc(kstTime)} · 출처 숲나들e 월별 예약현황 · 1박 체크인 기준, 하루 여러 번 갱신</p>`;
 
 // ---- 2-2. 시즌 랜딩·허브 (이슈 #36): 페이지 내용은 curation.mjs, 여기서는 틀(page)에 끼워 쓴다 ----
 const forestUrl = (f) => `/forest/${encodeURIComponent(f.id)}`;
@@ -341,7 +341,7 @@ for (const f of status.forests) {
   }).join('');
 
   const desc = `${f.name}(${f.sidoName} ${f.sigungu}) ${kinds.map(kindName).join('·')} 예약 빈자리와 취소표를 날짜별로 정리했습니다. ` +
-    (nearest ? `가장 가까운 빈자리 ${mdw(nearest)}, 예약가능 ${total.toLocaleString()}건.` : '지금은 예약가능한 날짜가 없습니다.') + ' 3시간마다 갱신.';
+    (nearest ? `가장 가까운 빈자리 ${mdw(nearest)}, 예약가능 ${total.toLocaleString()}건.` : '지금은 예약가능한 날짜가 없습니다.') + ' 하루 여러 번 갱신.';
   const nearby = status.forests.filter((x) => x.sido === f.sido && x.id !== f.id)
     .map((x) => ({ x, n: [...Object.values(AV.get(x.id))].reduce((m, mp) => m + mp.size, 0) }))
     .sort((a, b) => b.n - a.n).slice(0, 12);
@@ -407,7 +407,7 @@ ${REGIONS.map((r) => {
     return `<h2 id="${r.slug}">${esc(r.name)} <span class="fsub">${fs_.length}곳 · <a href="/vacancy/${r.slug}/this-weekend/">이번 주말 빈자리</a></span></h2>
 <ul class="flist">${fs_.map((f) => { const n = Object.values(AV.get(f.id)).reduce((m, mp) => m + mp.size, 0); return `<li><a href="${forestUrl(f)}">${esc(f.name)}</a><div class="fsub">${esc(f.type)} · ${esc(f.sigungu)} · 빈자리 ${n ? `${n}일` : '없음'}</div></li>`; }).join('')}</ul>`;
   }).join('\n')}`;
-  write('forest', page({ urlPath: '/forest/', title: `전국 자연휴양림 ${status.forests.length}곳 빈자리 현황 · 숲가자`, description: `전국 국립·공립·사립 자연휴양림 ${status.forests.length}곳을 지역별로 모아 휴양림마다 숙소·야영장 예약 빈자리와 예약 오픈 일정을 정리했습니다. 3시간마다 갱신.`, body }));
+  write('forest', page({ urlPath: '/forest/', title: `전국 자연휴양림 ${status.forests.length}곳 빈자리 현황 · 숲가자`, description: `전국 국립·공립·사립 자연휴양림 ${status.forests.length}곳을 지역별로 모아 휴양림마다 숙소·야영장 예약 빈자리와 예약 오픈 일정을 정리했습니다. 하루 여러 번 갱신.`, body }));
   urls.push({ loc: '/forest/', freq: 'daily', pri: '0.8' });
 }
 
@@ -458,7 +458,7 @@ ${list.length ? `<table style="margin-top:16px"><thead><tr><th>휴양림</th><th
 ${list.slice(0, 80).map(({ f, byDate }) => `<tr><td><a href="${forestUrl(f)}"><b>${esc(f.name)}</b></a><div class="fsub">${esc(f.type)} · ${esc(f.sigungu)}</div></td><td>${byDate.slice(0, 8).map((d) => `<span class="${isWeekendStay(d.iso) ? 'rest' : ''}">${mdw(d.iso)}</span> ${d.a ? `숙소 <span class="num">${d.a}</span>` : ''}${d.a && d.b ? ' · ' : ''}${d.b ? `야영 <span class="num">${d.b}</span>` : ''}`).join('<br>')}${byDate.length > 8 ? `<div class="fsub">외 ${byDate.length - 8}일</div>` : ''}</td></tr>`).join('\n')}
 </tbody></table>${list.length > 80 ? `<p class="fsub">외 ${list.length - 80}곳은 <a href="/?${esc(appQs)}">숲가자에서 보기</a></p>` : ''}` : '<p class="note">지금은 이 조건에 예약가능한 자리가 없습니다. 취소표가 나오면 알림으로 받아 보세요.</p>'}
 `;
-    const desc = `${p.slug ? when + ' ' : ''}${r.name} 자연휴양림 숙소·야영장 예약 빈자리 ${list.length}곳을 빈자리 많은 순으로 정리했습니다. 숲나들e 예약현황을 3시간마다 모아 갱신합니다.`;
+    const desc = `${p.slug ? when + ' ' : ''}${r.name} 자연휴양림 숙소·야영장 예약 빈자리 ${list.length}곳을 빈자리 많은 순으로 정리했습니다. 숲나들e 예약현황을 하루 여러 번 모아 갱신합니다.`;
     write(urlPath.slice(1, -1), page({ urlPath, title: `${title} · 숲가자`, description: desc, body }));
     urls.push({ loc: urlPath, freq: 'hourly', pri: p.slug ? '0.7' : '0.6' });
   }
@@ -489,7 +489,7 @@ ${list.slice(0, 80).map(({ f, byDate }) => `<tr><td><a href="${forestUrl(f)}"><b
   }).join('');
   const home = `<section style="max-width:760px;margin:0 auto;padding:0 16px 32px;color:#4b5650;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.7;font-size:15px">
 <h2 style="font-size:18px;color:#1d2420">숲가자는 이런 서비스입니다</h2>
-<p>숲가자는 전국 자연휴양림 ${n}곳의 숙소·야영장 예약 빈자리를 한곳에 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 약 3시간마다 모으며, 마지막 갱신 ${esc(kstTime)} 기준입니다. 이 사이트는 예약 대행이 아니며 결제도 없습니다. 예약은 숲나들e에서 직접 하세요. <a href="/about">서비스 소개</a> · <a href="/faq.html">자주 묻는 질문</a></p>
+<p>숲가자는 전국 자연휴양림 ${n}곳의 숙소·야영장 예약 빈자리를 한곳에 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 하루 여러 번 모으며, 마지막 갱신 ${esc(kstTime)} 기준입니다. 이 사이트는 예약 대행이 아니며 결제도 없습니다. 예약은 숲나들e에서 직접 하세요. <a href="/about">서비스 소개</a> · <a href="/faq.html">자주 묻는 질문</a></p>
 <h2 style="font-size:18px;color:#1d2420">이용 방법</h2>
 <ol style="padding-left:20px"><li>지역과 기간(예: 이번 주말)을 고릅니다.</li><li>숙소와 야영장 중 원하는 것과 인원을 정합니다.</li><li>목록·지도·달력·월간 그리드로 빈자리를 확인하고, 예약은 숲나들e에서 합니다.</li></ol>
 <p>바로 가기: <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a> · <a href="/vacancy/all/next-weekend/">다음 주말 빈자리</a> · <a href="/forest/">휴양림 전체 목록</a></p>
@@ -526,6 +526,11 @@ const curUrls = [];
 for (const p of cur.pages) {
   write(p.urlPath.slice(1, -1), page({ urlPath: p.urlPath, title: p.title, description: p.description, body: p.body, jsonld: p.jsonld }));
   curUrls.push({ loc: p.urlPath, freq: p.freq, pri: p.pri });
+}
+// 노출이 막 끝난 시즌은 404 대신 종료 안내(noindex, sitemap·llms 제외)
+for (const p of cur.expired) {
+  write(p.urlPath.slice(1, -1), page({ urlPath: p.urlPath, title: p.title, description: p.description, body: p.body, jsonld: p.jsonld })
+    .replace('<meta name="viewport"', '<meta name="robots" content="noindex,follow" />\n<meta name="viewport"'));
 }
 
 // ---- 7. sitemap ----

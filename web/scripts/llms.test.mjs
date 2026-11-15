@@ -28,7 +28,7 @@ test('llms.txt 는 제목·요약 인용문으로 시작하고 무엇을·어디
   const t = buildLlmsTxt(sample);
   assert.match(t, /^# 숲가자/);
   assert.match(t, /\n> 숲나들e\(foresttrip\.go\.kr\)/, '출처(어디서)');
-  assert.match(t, /약 3시간마다/, '갱신 주기(얼마나 자주)');
+  assert.match(t, /하루 여러 번/, '갱신 주기(얼마나 자주)');
   assert.match(t, /마지막 갱신: 2026-11-03 06:05 KST/);
   assert.match(t, /185곳/);
   assert.match(t, /7,464개/);

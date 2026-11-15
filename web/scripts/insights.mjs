@@ -136,6 +136,6 @@ ${topList}
 ${seriesBlock}
 
 <h2>출처와 문의</h2>
-<p>숲나들e(foresttrip.go.kr)에 로그인 없이 공개된 월별 예약현황을 약 3시간마다 모아 숲가자가 직접 집계한 값입니다. 원자료를 그대로 옮기지 않고 요약한 통계이며, 실제 예약 가능 여부는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요. 오류 제보·문의: <a href="mailto:supgaja@gmail.com">supgaja@gmail.com</a></p>
+<p>숲나들e(foresttrip.go.kr)에 로그인 없이 공개된 월별 예약현황을 하루 여러 번 모아 숲가자가 직접 집계한 값입니다. 원자료를 그대로 옮기지 않고 요약한 통계이며, 실제 예약 가능 여부는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요. 오류 제보·문의: <a href="mailto:supgaja@gmail.com">supgaja@gmail.com</a></p>
 <p><a href="/forest/">휴양림 전체 목록</a> · <a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a> · <a href="/about">소개</a></p>`;
 }

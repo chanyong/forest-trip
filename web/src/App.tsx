@@ -29,7 +29,7 @@ const LOAD_TIMEOUT_MS = 30000;
 const withTimeout = <T,>(p: Promise<T>) =>
   Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('응답 시간 초과')), LOAD_TIMEOUT_MS))]);
 
-// 수집 주기는 약 3시간. 6시간 넘게 묵으면 수집이 밀린 것으로 보고 알린다
+// 수집 주기는 하루 여러 번. 6시간 넘게 묵으면 수집이 밀린 것으로 보고 알린다
 const STALE_MIN = 360;
 const ago = (min: number) => (min < 1 ? '방금 전' : min < 60 ? `${min}분 전` : min < 1440 ? `${Math.floor(min / 60)}시간 전` : `${Math.floor(min / 1440)}일 전`);
 
@@ -207,7 +207,7 @@ export default function App() {
             const stale = age > STALE_MIN;
             return (
               <span className={`stamp${stale ? ' stale' : ''}`}
-                title={`숲나들e 예약현황을 약 3시간마다 모읍니다. 그 사이 예약이 바뀌었을 수 있으니 예약 전에 숲나들e에서 다시 확인하세요.${stale ? ' 최근 수집이 지연되고 있습니다.' : ''}`}>
+                title={`숲나들e 예약현황을 하루 여러 번 모읍니다. 그 사이 예약이 바뀌었을 수 있으니 예약 전에 숲나들e에서 다시 확인하세요.${stale ? ' 최근 수집이 지연되고 있습니다.' : ''}`}>
                 <span aria-hidden>{stale ? '⚠' : '🕒'}</span> 수집<span className="stamp-date"> {new Date(status.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} ·</span>
                 <span className="stamp-ago"> {ago(age)}</span>
               </span>
@@ -240,7 +240,7 @@ export default function App() {
             <Summary status={status} changes={changes} meta={meta} onOpen={openForest} />
             <p className="basis">
               마지막 갱신 {new Date(status.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              {' · '}출처 숲나들e 월별 예약현황 · 기준 1박 체크인 날짜, 약 3시간마다 갱신
+              {' · '}출처 숲나들e 월별 예약현황 · 기준 1박 체크인 날짜, 하루 여러 번 갱신
             </p>
             <FilterBar
               favCount={favs.size}

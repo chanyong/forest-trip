@@ -53,9 +53,13 @@ test('about.html: 알림 섹션이 있고 검증 안 된 문구는 없다 (이�
   assert.match(s, /이미 마감됐을 수 있습니다/);
   assert.match(s, /7일 뒤 삭제/);
   assert.ok(s.includes('href="/privacy"'));
-  for (const bad of ['즉시 알림', '새로 생긴', '하루']) {
+  // 이슈 #40: 사이트 공통 갱신 문구 "하루 여러 번"이 들어가므로 '하루' 금지는 알림 섹션 안으로 한정한다
+  const a0 = s.indexOf('<h2 id="alerts">');
+  const alertSec = s.slice(a0, s.indexOf('<h2', a0 + 10));
+  for (const bad of ['즉시 알림', '새로 생긴']) {
     assert.ok(!s.includes(bad), `about.html에 금지 문구: ${bad}`);
   }
+  assert.ok(!alertSec.includes('하루'), 'about 알림 섹션에 금지 문구: 하루');
 });
 
 test('faq.html: 알림 항목이 about 알림 설명과 모순되지 않는다 (이슈 #20)', () => {

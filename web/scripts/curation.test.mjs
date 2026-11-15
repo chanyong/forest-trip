@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
-import { buildCuration, resolveSeason, SEASONS, fourPrices, campGroupOf, CAMP_GROUPS } from './curation.mjs';
+import { buildCuration, resolveSeason, recentlyEnded, SEASONS, fourPrices, campGroupOf, CAMP_GROUPS } from './curation.mjs';
 import { pairwise } from './similarity.mjs';
 
 const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
@@ -106,14 +106,15 @@ test('금지 표현·이미지·네이버 별점이 없다', () => {
   }
 });
 
-test('아이와 함께 허브: 기준(정원 4~6인 숙소)이 적혀 있고 아이 안전·연령 적합 단정이 없다', () => {
+test('가족(4~6인) 숙소 비교 허브: 기준(정원 4~6인 숙소)이 적혀 있고 아이 안전·연령 적합 단정이 없다', () => {
   const k = bySlug(cur, 'kids');
   assert.match(k.guide, /정원 4~6인/);
   assert.match(k.guide, /수집 항목에 없으므로 판단하지 않습니다/);
   assert.doesNotMatch(textOf(k), /안전합니다|안심|아이에게 좋/);
   assert.ok(k.forests.length <= 30);
-  assert.match(k.body, /편의 표시\(객실 수\)/);
-  assert.match(k.body, /<th class="hide-sm">편의 표시/, '좁은 화면에서는 보조 열을 숨김');
+  assert.equal(k.urlPath, '/hub/kids/', '주소는 유지');
+  assert.match(k.name + k.title + k.body, /가족\(4~6인\) 숙소 비교/);
+  assert.doesNotMatch(textOf(k) + k.title + k.description, /아이와 함께|편의 표시|온수/, '이슈 #40: 이름 변경, 편의 열·온수 문장 제거');
 });
 
 test('야영장 허브: 유형 묶음이 야영장 사이트를 빠짐없이 한 번씩 센다', () => {
@@ -178,4 +179,59 @@ test('정원 4~6인 객실이나 수도권 휴양림이 없으면 해당 허브�
   const cu = buildCuration({ ...ctxFor(kstDay), status: { ...status, forests } });
   assert.ok(!bySlug(cu, 'kids') && !bySlug(cu, 'capital'));
   assert.ok(bySlug(cu, 'camping'));
+});
+
+// Value: protects=이슈 #40 재검토 반영(사실 정정·종료 처리); fails_when=겨울 시설 안내 문장·'3시간마다'·JSON-LD 불일치·가을 종료 후 404 가 되돌아옴; why_new=재검토 지적; seam=none; no_claim=문구의 정확성 전반
+test('이슈 #40: 겨울 랜딩에 상위 30곳만 있는 시설 안내를 모든 곳에 있다고 쓰지 않는다', () => {
+  assert.doesNotMatch(textOf(bySlug(cur, 'winter')), /시설 안내|온수·전기/);
+});
+
+test('이슈 #40: 갱신 주기는 "하루 여러 번"이고 "3시간마다"는 어느 페이지에도 없다', () => {
+  for (const p of cur.pages) assert.doesNotMatch(textOf(p) + p.title + p.description + JSON.stringify(p.jsonld), /3시간/, p.slug);
+  assert.match(bySlug(cur, 'winter').description, /하루 여러 번/);
+  for (const f of ['index.html', 'public/about.html', 'public/faq.html', 'public/terms.html', 'scripts/build-static.mjs', 'scripts/llms.mjs', 'scripts/insights.mjs', 'src/App.tsx']) {
+    assert.doesNotMatch(read(f), /3시간마다|약 3시간/, f);
+  }
+});
+
+test('이슈 #40: 시즌 랜딩 최저 요금 문장에 숙소·야영장 구분을 적는다', () => {
+  assert.match(bySlug(cur, 'autumn').guide, /표시된 숙소 비수기 주말 요금 중 가장 낮은 값/);
+});
+
+test('이슈 #40: JSON-LD numberOfItems 는 itemListElement 개수와 같다', () => {
+  for (const p of cur.pages) {
+    const l = p.jsonld.find((x) => x['@type'] === 'CollectionPage').mainEntity;
+    assert.equal(l.numberOfItems, l.itemListElement.length, p.slug);
+  }
+});
+
+test('이슈 #40: 가족(4~6인) 허브는 편의 열과 온수 문장이 없다', () => {
+  const k = bySlug(cur, 'kids');
+  assert.doesNotMatch(k.body, /hide-sm|온수|에어컨|전기/);
+});
+
+test('이슈 #40: 야영장 묶음: 캐라반·카라반 구분, 바비큐장·오두막은 따로, 0건이면 페이지 없음', () => {
+  assert.equal(campGroupOf({ cls: '무궁화캐라반' }).slug, 'caravan');
+  assert.equal(campGroupOf({ cls: '카라반' }).slug, 'caravan');
+  assert.equal(campGroupOf({ cls: '카라반사이트' }).slug, 'caravan-site');
+  assert.equal(campGroupOf({ cls: '캠핑카야영장' }).slug, 'caravan-site');
+  assert.equal(campGroupOf({ cls: '가족바비큐장(입실 당일 저녁 이용)' }).slug, 'extra');
+  assert.equal(campGroupOf({ cls: '오두막' }).slug, 'extra');
+  assert.equal(campGroupOf({ cls: '캠핑하우스' }).slug, 'glamping');
+  const noCamp = buildCuration({ ...ctxFor(kstDay), status: { ...status, forests: status.forests.map((f) => ({ ...f, goods: f.goods.filter((g) => g.kind !== '02') })) } });
+  assert.ok(!bySlug(noCamp, 'camping') && bySlug(noCamp, 'kids'));
+});
+
+test('이슈 #40: 가을 노출이 끝난 뒤에도 주소는 404 가 아니라 종료 안내가 남는다(색인·sitemap 제외)', () => {
+  const after = buildCuration(ctxFor('2026-11-21'));
+  assert.ok(!bySlug(after, 'autumn'), '본 페이지는 내려감');
+  const stub = after.expired.find((p) => p.slug === 'autumn');
+  assert.ok(stub, '종료 안내 페이지');
+  assert.equal(stub.urlPath, '/season/autumn/');
+  assert.match(stub.body, /종료되었습니다/);
+  assert.match(stub.body, /href="\/season\/winter\/"/, '지금 볼 수 있는 겨울 모음으로 안내');
+  assert.ok(!after.pages.some((p) => p.slug === 'autumn'), 'sitemap·llms 는 pages 만 쓴다');
+  assert.ok(!cur.expired.some((p) => p.slug === 'autumn'), '노출 중에는 종료 안내가 없다');
+  assert.equal(recentlyEnded(SEASONS.find((s) => s.slug === 'autumn'), '2027-02-10'), false, '60일 뒤에는 남기지 않음');
+  assert.match(read('scripts/build-static.mjs'), /for \(const p of cur\.expired\)[\s\S]*noindex/);
 });
