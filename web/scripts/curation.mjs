@@ -157,8 +157,9 @@ ${SOURCE(` 요금 열은 ${esc(KIND_NAME[s.kinds[0]])} 객실 중 가장 낮은 
   }
 
   // ---- 허브 1: 수도권 근교 ----
-  {
+  capital: {
     const fs_ = status.forests.filter((f) => f.sido === '1');
+    if (!fs_.length) break capital; // 수집 데이터에 없으면 페이지를 만들지 않는다
     const lo = c.first, hi = status.days - 1;
     const rows = fs_.map((f) => {
       const lodging = f.goods.filter((g) => g.kind === '01'), camp = f.goods.filter((g) => g.kind === '02');
@@ -191,7 +192,7 @@ ${SOURCE(' 빈자리 일수는 예약가능(A)인 객실·사이트가 하나라
   }
 
   // ---- 허브 2: 아이와 함께 (정원 4~6인 숙소 객실 기준) ----
-  {
+  kids: {
     const lo = c.first, hi = status.days - 1;
     const rows = [];
     for (const f of status.forests) {
@@ -199,6 +200,7 @@ ${SOURCE(' 빈자리 일수는 예약가능(A)인 객실·사이트가 하나라
       if (goods.length) rows.push({ f, goods, t: tally(goods, lo, hi), price: fourPrices(goods) });
     }
     rows.sort((a, b) => b.goods.length - a.goods.length || a.f.name.localeCompare(b.f.name, 'ko'));
+    if (!rows.length) break kids; // 이 크기 객실이 없으면 페이지를 만들지 않는다(topRow 없음)
     const shown = rows.slice(0, 30);
     const flagTxt = (goods) => Object.entries(FLAG_LABELS).map(([k, l]) => { const n = goods.filter((g) => (g.flags || '').includes(k)).length; return n ? `${l} ${n}` : ''; }).filter(Boolean).join(' · ') || '<span class="fsub">표시 없음</span>';
     const topRow = rows[0];

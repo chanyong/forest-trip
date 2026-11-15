@@ -171,3 +171,11 @@ test('build-static·llms·vercel.json·FAQ 가 새 페이지를 연결한다', (
     assert.ok(existsSync(new URL(`../dist${p.urlPath}index.html`, import.meta.url)), `dist ${p.urlPath}`);
   }
 });
+
+// Value: protects=데이터가 비어도 정적 생성이 멈추지 않음; fails_when=정원 4~6인 객실·수도권 휴양림이 없을 때 topRow 접근으로 빌드 중단; why_new=리뷰 지적; seam=none; no_claim=실제 데이터 분포
+test('정원 4~6인 객실이나 수도권 휴양림이 없으면 해당 허브만 빠지고 빌드는 계속된다', () => {
+  const forests = status.forests.filter((f) => f.sido !== '1').map((f) => ({ ...f, goods: f.goods.filter((g) => !(g.kind === '01' && g.cap >= 4 && g.cap <= 6)) }));
+  const cu = buildCuration({ ...ctxFor(kstDay), status: { ...status, forests } });
+  assert.ok(!bySlug(cu, 'kids') && !bySlug(cu, 'capital'));
+  assert.ok(bySlug(cu, 'camping'));
+});
