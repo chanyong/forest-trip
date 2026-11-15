@@ -46,6 +46,13 @@ test('llms.txt 에 주요 페이지와 데이터 링크가 있다', () => {
   assert.match(t, /`A` 예약가능/, '상태 코드 설명');
 });
 
+test('llms.txt 에 시즌 랜딩·허브 목록이 있고 없으면 줄이 생기지 않는다 (이슈 #36)', () => {
+  const t = buildLlmsTxt({ ...sample, guides: [{ name: '수도권 근교', path: '/hub/capital/', desc: '경기 25곳 비교' }] });
+  assert.ok(t.includes(`- [수도권 근교](${SITE}/hub/capital/): 경기 25곳 비교
+- [서비스 소개]`));
+  assert.ok(!buildLlmsTxt(sample).includes('/hub/'));
+});
+
 test('llms.txt 지역별 요약 표에 지역별 수와 전국 합계가 있다', () => {
   const t = buildLlmsTxt(sample);
   assert.ok(t.includes('| 강원 | 2 | gangwon | 28 | 20 | 4 | 6 |'));

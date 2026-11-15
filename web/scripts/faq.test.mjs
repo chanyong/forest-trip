@@ -1,4 +1,4 @@
-// 이슈 #21: FAQ 20~30문항, 문항마다 근거·확인일, 알림 문구 제한, JSON-LD 일치
+// 이슈 #21: FAQ 20~32문항, 문항마다 근거·확인일, 알림 문구 제한, JSON-LD 일치
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
@@ -7,9 +7,9 @@ const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 const ITEM = /<details class="item"><summary>([\s\S]*?)<\/summary><div class="a">([\s\S]*?)<\/div><\/details>/g;
 const items = () => [...read('public/faq.html').matchAll(ITEM)].map(([, q, a]) => ({ q, a }));
 
-test('faq: 20~30문항, 질문 중복 없음', () => {
+test('faq: 20~32문항, 질문 중복 없음', () => {
   const it = items();
-  assert.ok(it.length >= 20 && it.length <= 30, `문항 수 ${it.length}`);
+  assert.ok(it.length >= 20 && it.length <= 32, `문항 수 ${it.length}`); // 이슈 #36 에서 모음 페이지 안내 2문항을 더해 상한을 30→32
   assert.equal(new Set(it.map((x) => x.q)).size, it.length);
 });
 
