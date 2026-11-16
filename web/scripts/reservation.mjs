@@ -93,6 +93,25 @@ export function groupByRule(forests, nowIso) {
   return [...map.values()].sort((a, b) => (a.rule === null) - (b.rule === null) || b.forests.length - a.forests.length || String(a.rule).localeCompare(String(b.rule), 'ko'));
 }
 
+/**
+ * 국립 휴양림 평일 선착순 오픈 규칙(대표 결정 11-16: 수집 데이터 기준으로 단정). 문구는 수집한 예약정책 값을
+ * policy.mjs 로 계산한 결과에서 만든다(요일·시각·주 수·곳 수·확인일을 손으로 고정하지 않는다).
+ * 모두 같은 규칙이면 단정하고, 갈리면 가장 많은 규칙과 예외 수를 적고, 규칙을 계산한 곳이 없으면 확인 필요로 둔다.
+ */
+export function weekdayRule(forests, nowIso) {
+  const nat = forests.filter((f) => f.type === '국립');
+  const date = new Date(Date.parse(nowIso) + 9 * 3600e3).toISOString().slice(0, 10);
+  const tally = new Map();
+  for (const f of nat) { const r = policyInfo(f.policy, nowIso)?.rule; if (r) tally.set(r, (tally.get(r) || 0) + 1); }
+  const [rule, count] = [...tally].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'))[0] || [null, 0];
+  const total = nat.length, exceptions = total - count, unanimous = !!rule && exceptions === 0;
+  const base = `숲가자 수집 데이터 기준(${total}개 국립 휴양림, 확인일 ${date})`;
+  const text = !rule ? `${base}으로는 평일 선착순 오픈 규칙을 계산하지 못해 확인 필요입니다.`
+    : unanimous ? `${base}: ${total}곳 모두 ${rule}`
+    : `${base}: ${total}곳 중 ${count}곳이 ${rule} 나머지 ${exceptions}곳은 이 규칙으로 설명되지 않아 확인 필요입니다.`;
+  return { total, rule, count, exceptions, unanimous, date, text };
+}
+
 /** 오늘 이후 이번 달·다음 달 달력 행: [{date, cells:[html...]}] */
 export function calendarRows(c, groups) {
   const { todayISO, esc, forestUrl } = c;
@@ -140,6 +159,7 @@ export function buildReservationGuide(c) {
   const pub = status.forests.filter((f) => f.type === '공립').length;
   const pri = status.forests.filter((f) => f.type === '사립').length;
   const st = peakStats();
+  const wk = weekdayRule(status.forests, nowIso);
   const urlPath = '/reservation/';
   const link = (s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`;
   const [[y1, m1], [y2, m2]] = monthsFrom(c.todayISO);
@@ -179,7 +199,7 @@ ${caseBlock}
 
 <h2>국립·공립·사립은 이렇게 다릅니다</h2>
 <div style="overflow-x:auto"><table><thead><tr><th>구분</th><th>휴양림</th><th>오픈 방식</th></tr></thead><tbody>
-<tr><td style="white-space:nowrap"><b>국립</b></td><td style="white-space:nowrap">${nat}곳</td><td>주말(금·토·법정공휴일 전일)은 추첨으로 먼저 받습니다. 대상은 숲나들e 안내 기준 아세안자연휴양림을 뺀 국립 47곳입니다. 성수기는 별도 추첨입니다(아래). <b>평일 선착순의 오픈 요일·시각은 숲나들e 안내 페이지에 풀이가 없어 확인 필요</b>입니다. 휴양림 페이지의 예약 오픈 안내(수집한 예약정책 값 계산)를 참고만 하고, 숲나들e 공지에서 확인하세요.</td></tr>
+<tr><td style="white-space:nowrap"><b>국립</b></td><td style="white-space:nowrap">${nat}곳</td><td>주말(금·토·법정공휴일 전일)은 추첨으로 먼저 받습니다. 대상은 숲나들e 안내 기준 아세안자연휴양림을 뺀 국립 47곳입니다. 성수기는 별도 추첨입니다(아래). <b>평일 선착순</b>: ${esc(wk.text)} 숲나들e 예약정책 페이지(${link(SRC.policy)})도 참고하고, 예약 직전에 숲나들e 공지에서 확인하세요.</td></tr>
 <tr><td style="white-space:nowrap"><b>공립</b></td><td style="white-space:nowrap">${pub}곳</td><td>지자체가 정해 휴양림마다 다릅니다. 매월 정해진 날, 매주 정해진 요일, 주 단위 등 방식이 섞여 있습니다(아래 규칙표). 숲나들e 안내에 따르면 예약·이용·환불 책임은 지자체에 있습니다.</td></tr>
 <tr><td style="white-space:nowrap"><b>사립</b></td><td style="white-space:nowrap">${pri}곳</td><td>개인이 운영하며 휴양림마다 다릅니다. 숲나들e 안내에 따르면 예약·이용·환불 책임은 운영자에게 있습니다.</td></tr>
 </tbody></table></div>

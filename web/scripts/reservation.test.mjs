@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildReservationGuide, groupByRule, calendarRows, monthsFrom, peakStats, PEAK, WEEKEND_LOTTERY, DEC_CASE, CHECKED } from './reservation.mjs';
+import { buildReservationGuide, weekdayRule, groupByRule, calendarRows, monthsFrom, peakStats, PEAK, WEEKEND_LOTTERY, DEC_CASE, CHECKED } from './reservation.mjs';
 
 const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 const status = JSON.parse(read('public/data/status.json'));
@@ -39,15 +39,14 @@ test('12월분 공지 사례: 11/18·11/25 선착순 구간이 나오고, 유효
   assert.equal(DEC_CASE.validThrough, '2026-11-25');
 });
 
-// Value: protects=공립·사립 규칙을 policy.mjs 계산으로만 보여 주고 국립 평일 선착순은 단정하지 않는 결정(11-16); fails_when=국립 휴양림 규칙이 단정되거나 곳 수가 안 맞음; why_new=신규; seam=none; no_claim=규칙 자체의 정확성
-test('공립·사립은 규칙별로 한 번씩 묶이고 국립은 규칙표에 없다(평일 선착순은 확인 필요)', () => {
+// Value: protects=공립·사립 규칙을 policy.mjs 계산으로만 보여 주는 결정(11-16); fails_when=국립 휴양림이 공립·사립 규칙표에 섞이거나 곳 수가 안 맞음; why_new=신규; seam=none; no_claim=규칙 자체의 정확성
+test('공립·사립은 규칙별로 한 번씩 묶이고 국립은 규칙표에 없다', () => {
   const groups = groupByRule(status.forests, status.generatedAt);
   const n = groups.reduce((m, g) => m + g.forests.length, 0);
   assert.equal(n, status.forests.filter((f) => f.type !== '국립').length);
   assert.ok(groups.every((g) => g.forests.every((f) => f.type !== '국립')));
   const ids = groups.flatMap((g) => g.forests.map((f) => f.id));
   assert.equal(new Set(ids).size, ids.length, '한 곳은 한 묶음에만');
-  assert.match(page.body, /평일 선착순의 오픈 요일·시각은 숲나들e 안내 페이지에 풀이가 없어 확인 필요/);
   const groupHtml = page.body.split('공립·사립 오픈 규칙')[1].split('성수기 추첨 경쟁률 기록')[0];
   for (const f of status.forests.filter((x) => x.type === '국립')) assert.ok(!groupHtml.includes('href="/forest/' + encodeURIComponent(f.id) + '"'), '국립 ' + f.name + ' 은 규칙표에 없다');
 });
@@ -109,4 +108,42 @@ test('/reservation 이 build-static·sitemap·llms·vercel rewrite·푸터와 �
   const vercel = JSON.parse(read('../vercel.json'));
   assert.ok(vercel.rewrites.some((r) => r.source === '/reservation' && r.destination === '/reservation/index.html'));
   assert.equal(page.urlPath, '/reservation/');
+});
+
+// Value: protects=국립 평일 선착순 문구가 수집 데이터(policy.mjs 계산)에서 만들어져 데이터가 바뀌면 따라가고, 갈리면 단정하지 않는 결정(11-16); fails_when=요일·시각·곳 수·확인일이 손으로 고정되거나 예외가 있는데 단정함; why_new=신규; seam=none; no_claim=숲나들e 실제 정책
+const nowIso = status.generatedAt;
+const natForests = status.forests.filter((f) => f.type === '국립');
+const withPolicy = (f, patch) => ({ ...f, policy: { ...f.policy, ...patch } });
+
+test('국립 평일 선착순: 전부 같은 규칙이면 수집 데이터 기준으로 단정하고 곳 수·확인일이 계산값이다', () => {
+  const w = weekdayRule(status.forests, nowIso);
+  assert.equal(w.unanimous, true);
+  assert.equal(w.total, natForests.length);
+  assert.equal(w.count, w.total);
+  assert.match(w.text, new RegExp(`^숲가자 수집 데이터 기준\\(${w.total}개 국립 휴양림, 확인일 ${w.date}\\): ${w.total}곳 모두 매주 수요일 09:00에 `));
+  assert.equal(w.date, new Date(Date.parse(nowIso) + 9 * 3600e3).toISOString().slice(0, 10));
+  assert.doesNotMatch(w.text, /(?<!비)공식/);
+  assert.match(page.body, /<b>평일 선착순<\/b>: 숲가자 수집 데이터 기준/);
+  assert.match(page.body, /https:\/\/www\.foresttrip\.go\.kr\/pot\/cc\/bb\/selectFripRsrvtPolcyView\.do/);
+});
+
+test('국립 평일 선착순: 규칙이 갈리면 단정하지 않고 가장 많은 규칙과 예외 수를 적는다', () => {
+  const mixed = natForests.map((f, i) => (i < 3 ? withPolicy(f, { day: '5', lastDay: '20261223' }) : f));
+  const w = weekdayRule(mixed, nowIso);
+  assert.equal(w.unanimous, false);
+  assert.equal(w.count, natForests.length - 3);
+  assert.equal(w.exceptions, 3);
+  assert.match(w.text, new RegExp(`${natForests.length}곳 중 ${natForests.length - 3}곳이 매주 수요일 09:00`));
+  assert.match(w.text, /나머지 3곳은 이 규칙으로 설명되지 않아 확인 필요/);
+  assert.doesNotMatch(w.text, /곳 모두/);
+});
+
+test('국립 평일 선착순: 규칙을 계산한 곳이 없으면 확인 필요로 떨어진다(정책 없음·국립 없음)', () => {
+  const none = natForests.map((f) => ({ ...f, policy: null }));
+  const w = weekdayRule(none, nowIso);
+  assert.equal(w.rule, null);
+  assert.equal(w.unanimous, false);
+  assert.match(w.text, /계산하지 못해 확인 필요/);
+  assert.equal(weekdayRule([], nowIso).total, 0);
+  assert.match(weekdayRule([], nowIso).text, /확인 필요/);
 });
