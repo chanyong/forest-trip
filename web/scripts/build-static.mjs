@@ -19,6 +19,7 @@ import { loadHistory, trendSection } from './trend.mjs';
 import { computeStats, historySeries, insightsBody } from './insights.mjs';
 import { detailSection } from './forest-detail.mjs';
 import { buildCuration } from './curation.mjs';
+import { buildReservationGuide } from './reservation.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(WEB, 'dist');
@@ -269,7 +270,7 @@ ${body}
 </main>
 <footer>
   <p>숲가자는 숲나들e(foresttrip.go.kr)에 공개된 월별 예약현황을 하루 여러 번 모아 보여 주는 <b>비공식 참고용</b> 서비스입니다. 실제 예약 가능 여부는 수집 이후 바뀌었을 수 있으니 예약·결제는 <a href="https://www.foresttrip.go.kr" target="_blank" rel="noopener">숲나들e</a>에서 확인하세요.</p>
-  <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/about">소개</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a><a href="/network">운영자의 다른 서비스</a></nav>
+  <nav aria-label="사이트 링크"><a href="/">빈자리 찾기</a><a href="/forest/">휴양림 전체 목록</a><a href="/vacancy/all/this-weekend/">이번 주말 빈자리</a><a href="/reservation/">예약 오픈·추첨 일정</a><a href="/about">소개</a><a href="/faq.html">자주 묻는 질문</a><a href="/privacy">개인정보처리방침</a><a href="/terms">이용약관</a><a href="/network">운영자의 다른 서비스</a></nav>
   <p class="biz"><b>사업자 정보</b> · 대표: 홍지혜(넥스트웨이브) · 사업자등록번호: 311-11-67514</p>
 </footer>
 <script src="https://ddalkkakrank.kr/feedback.js" defer data-color="#0b6e4f"></script>
@@ -302,6 +303,9 @@ const cur = buildCuration({
   todayISO: generatedKST.slice(0, 10), mdw, md, dateOf: (i) => addDays(start, i), isWeekendStay,
   regionName: (c) => REGIONS.find((r) => r.code === c)?.name,
 });
+
+// ---- 2-3. 예약 오픈·추첨 일정 허브 (이슈 #38) ----
+const resv = buildReservationGuide({ status, esc, SITE, kstTime, forestUrl, todayISO: generatedKST.slice(0, 10), generatedAt });
 
 // ---- 3. 휴양림별 페이지 ----
 const recentByForest = new Map(); // 최근 72시간 안에 새로 열린(취소 등) 자리 중 지금도 비어 있는 것
@@ -533,6 +537,9 @@ for (const p of cur.expired) {
     .replace('<meta name="viewport"', '<meta name="robots" content="noindex,follow" />\n<meta name="viewport"'));
 }
 
+// ---- 6-4. 예약 오픈·추첨 일정 쓰기 (이슈 #38) ----
+write('reservation', page({ urlPath: resv.urlPath, title: resv.title, description: resv.description, body: resv.body, jsonld: resv.jsonld }));
+
 // ---- 7. sitemap ----
 const today = generatedKST.slice(0, 10);
 const fixed = [
@@ -542,6 +549,7 @@ const fixed = [
   { loc: '/?view=grid', freq: 'hourly', pri: '0.6' },
   { loc: '/about', freq: 'monthly', pri: '0.6' },
   { loc: '/insights/', freq: 'daily', pri: '0.5' },
+  { loc: resv.urlPath, freq: resv.freq, pri: resv.pri },
   { loc: '/faq.html', freq: 'monthly', pri: '0.5' },
   { loc: '/privacy', freq: 'yearly', pri: '0.2' },
   { loc: '/terms', freq: 'yearly', pri: '0.2' },
@@ -569,7 +577,7 @@ fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sm);
       return { name: r.name, code: r.code, slug: r.slug, forests: fs_.length, open: fs_.filter((f) => openDays(f) > 0).length,
         thisWeekend: landingCount.get(`${r.slug}:this-weekend`) ?? 0, nextWeekend: landingCount.get(`${r.slug}:next-weekend`) ?? 0 };
     }),
-    guides: cur.pages.map((p) => ({ name: p.name, path: p.urlPath, desc: p.description })),
+    guides: cur.pages.map((p) => ({ name: p.name, path: p.urlPath, desc: p.description })).concat({ name: resv.name, path: resv.urlPath, desc: resv.description }),
     nation: { thisWeekend: landingCount.get('all:this-weekend') ?? 0, nextWeekend: landingCount.get('all:next-weekend') ?? 0 },
   });
   fs.writeFileSync(path.join(DIST, 'llms.txt'), llms);

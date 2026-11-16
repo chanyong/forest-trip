@@ -107,6 +107,10 @@
       "destination": "/insights/index.html"
     },
     {
+      "source": "/reservation",
+      "destination": "/reservation/index.html"
+    },
+    {
       "source": "/privacy",
       "destination": "/privacy.html"
     },
