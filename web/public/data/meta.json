@@ -1,17 +1,17 @@
 {
- "generatedAt": "2026-11-22T09:19:43.475Z",
- "start": "20261122",
+ "generatedAt": "2026-11-22T17:28:37.556Z",
+ "start": "20261123",
  "end": "20270131",
- "durationSec": 1646,
+ "durationSec": 1499,
  "requests": 3222,
  "ok": 3222,
  "fail": 0,
  "totals": {
   "forests": 185,
   "goods": 7460,
-  "available": 99880
+  "available": 99329
  },
- "newlyOpened": 483,
+ "newlyOpened": 1267,
  "unknownCodes": {
   "NOTOPEN": 19
  },
