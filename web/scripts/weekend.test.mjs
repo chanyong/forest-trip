@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { buildWeekendJson } from './weekend.mjs';
 
 const WEB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const f = (id, n) => ({ id, name: `휴양림${id}`, type: '국립', sidoName: '강원', sigungu: '평창군' });
+const f = (id) => ({ id, name: `휴양림${id}`, type: '국립', sidoName: '강원', sigungu: '평창군' });
 const mk = (name, from, to, nForests) => ({
   name, from, to,
   regions: [{ slug: 'all', name: '전국', forests: nForests }, { slug: 'gangwon', name: '강원', forests: 1 }],

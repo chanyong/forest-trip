@@ -567,8 +567,8 @@ fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sm);
 // ---- 7-2. 이번 주말 빈자리 JSON (이슈 #44) ----
 {
   const weekends = {};
-  for (const [key, pi] of [['this', 1], ['next', 2]]) {
-    const p = PERIODS[pi];
+  for (const [key, slug] of [['this', 'this-weekend'], ['next', 'next-weekend']]) {
+    const p = PERIODS.find((x) => x.slug === slug);
     weekends[key] = {
       name: p.name, from: p.from, to: p.to,
       regions: [ALL, ...REGIONS].map((r) => ({ slug: r.slug, name: r.name, forests: landingCount.get(`${r.slug}:${p.slug}`) ?? 0 })),
