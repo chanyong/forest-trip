@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { policyInfo } from '../src/lib/policy.mjs';
 import { networkLinks } from '../src/lib/network.mjs';
 import { buildLlmsTxt } from './llms.mjs';
+import { buildWeekendJson } from './weekend.mjs';
 import { loadHistory, trendSection } from './trend.mjs';
 import { computeStats, historySeries, insightsBody } from './insights.mjs';
 import { detailSection } from './forest-detail.mjs';
@@ -417,6 +418,7 @@ ${REGIONS.map((r) => {
 
 // ---- 5. 지역·시기 랜딩 ----
 const ALL = { code: '', slug: 'all', name: '전국', short: '전국' };
+const landingLists = new Map(); // `${지역 slug}:${시기 slug}` → 빈자리 있는 휴양림 목록(weekend.json 에 씀)
 const landingCount = new Map(); // `${지역 slug}:${시기 slug}` → 빈자리 있는 휴양림 수(llms.txt 요약에 씀)
 for (const r of [ALL, ...REGIONS]) {
   for (const p of PERIODS) {
@@ -437,6 +439,7 @@ for (const r of [ALL, ...REGIONS]) {
     }
     list.sort((x, y) => y.n - x.n);
     landingCount.set(`${r.slug}:${p.slug}`, list.length);
+    landingLists.set(`${r.slug}:${p.slug}`, list);
     const when = p.slug ? `${p.name}(${mdw(p.from)}${p.to !== p.from ? `~${mdw(p.to)}` : ''} 체크인)` : '';
     const title = p.slug ? `${p.name} ${r.name} 자연휴양림 빈자리` : `${r.name} 자연휴양림 빈자리·취소표`;
     const urlPath = `/vacancy/${r.slug}/${p.slug ? p.slug + '/' : ''}`;
@@ -560,6 +563,21 @@ ${[...fixed, ...urls, ...curUrls].map((u) => `  <url><loc>${esc(SITE + u.loc)}</
 </urlset>
 `;
 fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sm);
+
+// ---- 7-2. 이번 주말 빈자리 JSON (이슈 #44) ----
+{
+  const weekends = {};
+  for (const [key, slug] of [['this', 'this-weekend'], ['next', 'next-weekend']]) {
+    const p = PERIODS.find((x) => x.slug === slug);
+    weekends[key] = {
+      name: p.name, from: p.from, to: p.to,
+      regions: [ALL, ...REGIONS].map((r) => ({ slug: r.slug, name: r.name, forests: landingCount.get(`${r.slug}:${p.slug}`) ?? 0 })),
+      list: (landingLists.get(`all:${p.slug}`) || []).map(({ f, n, byDate }) => ({ f, n, byDate: byDate.map((d) => ({ ...d, wd: DOW[dow(d.iso)] })) })),
+    };
+  }
+  fs.mkdirSync(path.join(DIST, 'data/ai'), { recursive: true });
+  fs.writeFileSync(path.join(DIST, 'data/ai/weekend.json'), JSON.stringify(buildWeekendJson({ site: SITE, generatedAt: generatedKST, weekends }), null, 1));
+}
 
 // ---- 8. llms.txt (이슈 #1) ----
 {
