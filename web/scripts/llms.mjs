@@ -57,6 +57,7 @@ ${guideLines}- [서비스 소개](${S}/about): 하는 일·하지 않는 일, �
 - ${S}/data/status.json (약 2MB): start(YYYYMMDD 첫 체크인 날짜)·days·forests[]. 휴양림마다 id·name·type(국립/공립/사립)·sidoName·sigungu·addr·tel·lat·lng·checkin·checkout·booking(예약률)·goods[]. 객실마다 kind(01 숙소, 02 야영장)·cls·name·cap(인원)·pr(요금 [비수기 평일, 비수기 주말, 성수기 평일, 성수기 주말])·s(상태 문자열)
 - 상태 문자열 s 는 start 부터 하루 1글자: \`A\` 예약가능 · \`1\`~\`9\` 대기(다음 대기 순번) · \`F\` 예약완료 · \`C\` 휴무 · \`R\` 공사·점검 · \`P\` 추첨·우선예약 기간 · \`.\` 기간 밖(아직 안 열림 등)
 - ${S}/data/changes.json: 최근 72시간 안에 예약완료·대기에서 예약가능으로 바뀐(취소 등) 자리
+- ${S}/data/ai/weekend.json: 이번 주말·다음 주말 빈자리 요약(체크인 범위, 지역별 휴양림 수, 빈자리 많은 휴양림 상위 30곳과 날짜별 숙소·야영장 객실 수). 수집 때마다 갱신
 - ${S}/alerts-feed.json: 휴양림 × 체크인 날짜 × 시설 유형별 예약가능 항목(빈자리 이메일 알림용)
 
 ## 지역별 요약
