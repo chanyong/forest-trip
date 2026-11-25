@@ -29,8 +29,8 @@ const LOAD_TIMEOUT_MS = 30000;
 const withTimeout = <T,>(p: Promise<T>) =>
   Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('응답 시간 초과')), LOAD_TIMEOUT_MS))]);
 
-// 수집 주기는 하루 여러 번. 6시간 넘게 묵으면 수집이 밀린 것으로 보고 알린다
-const STALE_MIN = 360;
+// 수집은 하루 여러 번이나 데이터 전용 배포는 12시간 구간당 한 번(vercel-ignore.mjs, 이슈 #46). 14시간 넘게 묵으면 수집이 밀린 것으로 보고 알린다
+const STALE_MIN = 840;
 const ago = (min: number) => (min < 1 ? '방금 전' : min < 60 ? `${min}분 전` : min < 1440 ? `${Math.floor(min / 60)}시간 전` : `${Math.floor(min / 1440)}일 전`);
 
 // 탭 아이콘 (24px 선 아이콘, 색은 CSS의 탭 색을 따른다)
